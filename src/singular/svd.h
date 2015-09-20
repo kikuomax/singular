@@ -28,10 +28,6 @@ namespace singular {
 	std::tuple< Matrix< M, M >, Matrix< M, N >, Matrix< N, N > >
 		svdUSV(const Matrix< M, N >& m)
 	{
-		/*
-		// allocates U, V matrices as identity matrices
-		Matrix< M, M > u = Matrix< M, M >::identity();
-		Matrix< N, N > v = Matrix< N, N >::identity();*/
 		// bidiagonalizes a given matrix
 		std::tuple< Matrix< M, M >,
 					Matrix< M, N >,
@@ -59,22 +55,22 @@ namespace singular {
 	std::tuple< Matrix< M, M >, Matrix< M, N >, Matrix< N, N > >
 		bidiagonalize(const Matrix< M, N >& m)
 	{
-		Matrix< M, N > m2 = m.clone();
+		Matrix< M, N > s = m.clone();
 		Matrix< M, M > u = Matrix< M, M >::identity();
 		Matrix< N, N > v = Matrix< N, N >::identity();
-		for (int i = 0; i + 1 < N; ++i) {
+		for (int i = 0; i < N; ++i) {
 			// applies a householder transform to the column vector i
-			Reflector< M > colReflector(m.column(i).slice(i));
-			m2 = colReflector.applyFromLeftTo(m2);
+			Reflector< M > colReflector(s.column(i).slice(i));
+			s = colReflector.applyFromLeftTo(s);
 			u = colReflector.applyFromLeftTo(u);
-			if (i + 2 <= N) {
+			if (i + 1 < N) {
 				// applies a householder transform to the row vector i + 1
-				Reflector< N > rowReflector(m.row(i + 1).slice(i + 1));
-				m2 = rowReflector.applyFromRightTo(m2);
+				Reflector< N > rowReflector(s.row(i).slice(i + 1));
+				s = rowReflector.applyFromRightTo(s);
 				v = rowReflector.applyFromRightTo(v);
 			}
 		}
-		return std::make_tuple(std::move(u), std::move(m2), std::move(v));
+		return std::make_tuple(std::move(u), std::move(s), std::move(v));
 	}
 
 }

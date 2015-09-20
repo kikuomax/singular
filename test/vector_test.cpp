@@ -15,13 +15,13 @@ TEST(VectorTest, Vector_can_be_associated_with_a_simple_array) {
 	// checks the size
 	ASSERT_EQ(N, v.size());
 	// checks the elements
-	ASSERT_EQ(data[0], v[0]);
-	ASSERT_EQ(data[1], v[1]);
-	ASSERT_EQ(data[2], v[2]);
-	ASSERT_EQ(data[3], v[3]);
+	EXPECT_EQ(data[0], v[0]);
+	EXPECT_EQ(data[1], v[1]);
+	EXPECT_EQ(data[2], v[2]);
+	EXPECT_EQ(data[3], v[3]);
 	// checks the iterator
 	ASSERT_EQ(N, std::distance(v.begin(), v.end()));
-	ASSERT_TRUE(std::equal(v.begin(), v.end(), data));
+	EXPECT_TRUE(std::equal(v.begin(), v.end(), data));
 }
 
 TEST(VectorTest, Vector_can_be_associated_with_an_empty_array) {
@@ -30,9 +30,9 @@ TEST(VectorTest, Vector_can_be_associated_with_an_empty_array) {
 	const size_t N = 0;
 	singular::Vector< double > v(data, N, 1);
 	// checks the size
-	ASSERT_EQ(N, v.size());
+	EXPECT_EQ(N, v.size());
 	// checks the iterator
-	ASSERT_EQ(N, std::distance(v.begin(), v.end()));
+	EXPECT_EQ(N, std::distance(v.begin(), v.end()));
 }
 
 TEST(VectorTest, Vector_can_interleave_data_array) {
@@ -51,11 +51,54 @@ TEST(VectorTest, Vector_can_interleave_data_array) {
 	// checks the size
 	ASSERT_EQ(N, v.size());
 	// checks the elements
-	ASSERT_EQ(data[0], v[0]);
-	ASSERT_EQ(data[1], v[1]);
-	ASSERT_EQ(data[2], v[2]);
-	ASSERT_EQ(data[3], v[3]);
+	EXPECT_EQ(data[0], v[0]);
+	EXPECT_EQ(data[1], v[1]);
+	EXPECT_EQ(data[2], v[2]);
+	EXPECT_EQ(data[3], v[3]);
 	// checks the iterator
 	ASSERT_EQ(N, std::distance(v.begin(), v.end()));
-	ASSERT_TRUE(std::equal(v.begin(), v.end(), data));
+	EXPECT_TRUE(std::equal(v.begin(), v.end(), data));
+}
+
+TEST(VectorTest, Vector_can_be_sliced) {
+	double block[] = {
+		1.0, 2.0, 3.0
+	};
+	singular::Vector< double > v(block, 3, 1);
+	double data[] = {
+		2.0, 3.0
+	};
+	const size_t N = 2;
+	singular::Vector< double > v2 = v.slice(1);
+	// checks the size
+	ASSERT_EQ(N, v2.size());
+	// checks the elements
+	EXPECT_EQ(data[0], v2[0]);
+	EXPECT_EQ(data[1], v2[1]);
+	// checks the iterator
+	ASSERT_EQ(N, std::distance(v2.begin(), v2.end()));
+	EXPECT_TRUE(std::equal(v2.begin(), v2.end(), data));
+}
+
+TEST(VectorTest, Interleaved_Vector_can_be_sliced) {
+	double block[] = {
+		1.0, 0, 0,
+		2.0, 0, 0,
+		3.0, 0, 0,
+		4.0, 0, 0
+	};
+	singular::Vector< double > v(block, 4, 3);
+	const double data[] = {
+		3.0, 4.0
+	};
+	const size_t N = 2;
+	singular::Vector< double > v2 = v.slice(2);
+	// checks the size
+	ASSERT_EQ(N, v2.size());
+	// checks the elements
+	EXPECT_EQ(data[0], v2[0]);
+	EXPECT_EQ(data[1], v2[1]);
+	// checks the iterator
+	ASSERT_EQ(N, std::distance(v2.begin(), v2.end()));
+	EXPECT_TRUE(std::equal(v2.begin(), v2.end(), data));
 }

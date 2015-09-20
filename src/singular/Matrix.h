@@ -108,13 +108,13 @@ namespace singular {
 		/**
 		 * Returns a given row in this matrix as a vector.
 		 *
-		 * @param j
+		 * @param i
 		 *     Index of the row to be obtained.
 		 * @return
-		 *     j-th row as a vector.
+		 *     i-th row as a vector.
 		 */
-		Vector< const double > row(int j) const {
-			return Vector< const double >(this->pBlock + j *N, N, 1);
+		Vector< const double > row(int i) const {
+			return Vector< const double >(this->pBlock + i * N, N, 1);
 		}
 
 		/**

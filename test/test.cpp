@@ -6,11 +6,11 @@
 int main(int argc, char** argv) {
 	singular::Matrix< 5, 4 > a;
 	const double DATA[] = {
-		1,  2,  3,  4,
-		5,  6,  7,  8,
-		9,  10, 11, 12,
-		13, 14, 15, 16,
-		17, 18, 19, 20
+		1, 2, 3, 4,
+		5, 6, 7, 8,
+		4, 8, 3, 5,
+		6, 7, 2, 1,
+		9, 1, 3, 6
 	};
 	a.fill(DATA);
 	std::tuple< singular::Matrix< 5, 5 >,
