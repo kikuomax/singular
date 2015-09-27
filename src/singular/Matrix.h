@@ -1,5 +1,5 @@
-#ifndef _SINGULAR_SINGULAR_MATRIX_H
-#define _SINGULAR_SINGULAR_MATRIX_H
+#ifndef _SINGULAR_MATRIX_H
+#define _SINGULAR_MATRIX_H
 
 #include "singular/Vector.h"
 

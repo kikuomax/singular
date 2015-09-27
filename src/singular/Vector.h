@@ -1,5 +1,5 @@
-#ifndef _SINGULAR_SINGULAR_VECTOR_H
-#define _SINGULAR_SINGULAR_VECTOR_H
+#ifndef _SINGULAR_VECTOR_H
+#define _SINGULAR_VECTOR_H
 
 #include "singular/Exception.h"
 

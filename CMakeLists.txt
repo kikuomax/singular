@@ -57,7 +57,8 @@ if (GENERATE_TESTS)
 	add_executable (singular-test
 		test/vector_test.cpp
 		test/matrix_test.cpp
-		test/reflector_test.cpp)
+		test/reflector_test.cpp
+		test/rotator_test.cpp)
 
 	target_link_libraries (singular-test ${GTEST_BOTH_LIBRARIES})
 

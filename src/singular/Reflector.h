@@ -1,5 +1,5 @@
-#ifndef _SINGULAR_SINGULAR_REFLECTOR_H
-#define _SINGULAR_SINGULAR_REFLECTOR_H
+#ifndef _SINGULAR_REFLECTOR_H
+#define _SINGULAR_REFLECTOR_H
 
 #include "singular/Matrix.h"
 

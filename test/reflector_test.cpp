@@ -3,7 +3,7 @@
 #include "gtest/gtest.h"
 
 TEST(ReflectorTest, Reflector_can_transform_a_4x1_matrix) {
-	const double ROUNDED_ERROR = 1.0e-15;
+	const double ROUNDED_ERROR = 1.0e-14;
 	double data[] = {
 		1.0, 2.0, 3.0, 4.0
 	};
@@ -18,7 +18,7 @@ TEST(ReflectorTest, Reflector_can_transform_a_4x1_matrix) {
 }
 
 TEST(ReflectorTest, Reflector_can_transform_a_1x3_matrix) {
-	const double ROUNDED_ERROR = 1.0e-15;
+	const double ROUNDED_ERROR = 1.0e-14;
 	double data[] = {
 		-1.0, -2.0, -3.0
 	};
@@ -32,7 +32,7 @@ TEST(ReflectorTest, Reflector_can_transform_a_1x3_matrix) {
 }
 
 TEST(ReflectorTest, Reflector_can_transform_a_4x3_matrix_from_left) {
-	const double ROUNDED_ERROR = 1.0e-15;
+	const double ROUNDED_ERROR = 1.0e-14;
 	double data[] = {
 		1.0,  2.0,  2.0,
 		1.0,  0.5, -3.0,
@@ -58,7 +58,7 @@ TEST(ReflectorTest, Reflector_can_transform_a_4x3_matrix_from_left) {
 }
 
 TEST(ReflectorTest, Reflector_can_transform_a_4x3_matrix_from_right) {
-	const double ROUNDED_ERROR = 1.0e-15;
+	const double ROUNDED_ERROR = 1.0e-14;
 	double data[] = {
 		1.0,  2.0,  2.0,
 		1.0,  0.5, -3.0,
@@ -84,7 +84,7 @@ TEST(ReflectorTest, Reflector_can_transform_a_4x3_matrix_from_right) {
 }
 
 TEST(ReflectorTest, 4x4_Reflector_can_transform_a_5x4_matrix_from_left) {
-	const double ROUNDED_ERROR = 1.0e-15;
+	const double ROUNDED_ERROR = 1.0e-14;
 	double data[] = {
 		1.0, 2.0,  3.0,  4.0,
 		2.0, 1.0,  2.0,  2.0,
@@ -119,7 +119,7 @@ TEST(ReflectorTest, 4x4_Reflector_can_transform_a_5x4_matrix_from_left) {
 }
 
 TEST(ReflectorTest, 3x3_Reflector_can_transform_a_5x4_matrix_from_right) {
-	const double ROUNDED_ERROR = 1.0e-15;
+	const double ROUNDED_ERROR = 1.0e-14;
 	double data[] = {
 		1.0, 2.0,  3.0,  4.0,
 		2.0, 1.0,  2.0,  2.0,
