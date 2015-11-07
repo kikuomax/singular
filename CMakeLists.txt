@@ -55,11 +55,11 @@ if (GENERATE_TESTS)
 	enable_testing ()
 
 	add_executable (singular-test
-		test/vector_test.cpp
-		test/matrix_test.cpp
-		test/reflector_test.cpp
-		test/rotator_test.cpp
-		test/svd_test.cpp)
+		test/VectorTest.cpp
+		test/MatrixTest.cpp
+		test/ReflectorTest.cpp
+		test/RotatorTest.cpp
+		test/SvdTest.cpp)
 
 	target_link_libraries (singular-test ${GTEST_BOTH_LIBRARIES})
 

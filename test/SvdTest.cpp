@@ -1,4 +1,4 @@
-#include "singular/svd.h"
+#include "singular/Svd.h"
 
 #include "gtest/gtest.h"
 
