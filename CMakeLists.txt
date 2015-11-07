@@ -58,7 +58,8 @@ if (GENERATE_TESTS)
 		test/vector_test.cpp
 		test/matrix_test.cpp
 		test/reflector_test.cpp
-		test/rotator_test.cpp)
+		test/rotator_test.cpp
+		test/svd_test.cpp)
 
 	target_link_libraries (singular-test ${GTEST_BOTH_LIBRARIES})
 
