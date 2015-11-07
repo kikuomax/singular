@@ -134,3 +134,286 @@ TEST(MatrixTest, Matrix_can_provide_column_vectors) {
 		EXPECT_TRUE(std::equal(v.begin(), v.end(), data));
 	}
 }
+
+TEST(MatrixTest, Product_of_3x3_matrix_and_3x3_matrix_should_be_3x3_matrix) {
+	const double ROUNDED_ERROR = 1.0e-14;
+	const int M1 = 3;
+	const int N1 = 3;
+	const int M2 = 3;
+	const int N2 = 3;
+	const double DATA1[] = {
+		1.0, -2.0, 3.0,
+		3.0, 1.0, 2.0,
+		4.0, 1.0, -5.0
+	};
+	const double DATA2[] = {
+		2.0, 1.0, 4.0,
+		5.0, 2.0, 3.0,
+		6.0, -1.0, 3.0
+	};
+	singular::Matrix< M1, N1 > m1;
+	m1.fill(DATA1);
+	singular::Matrix< M2, N2 > m2;
+	m2.fill(DATA2);
+	singular::Matrix< M1, N2 > p = m1 * m2;
+	EXPECT_NEAR(1.0*2.0 + -2.0*5.0 +  3.0* 6.0, p(0, 0), ROUNDED_ERROR);
+	EXPECT_NEAR(1.0*1.0 + -2.0*2.0 +  3.0*-1.0, p(0, 1), ROUNDED_ERROR);
+	EXPECT_NEAR(1.0*4.0 + -2.0*3.0 +  3.0* 3.0, p(0, 2), ROUNDED_ERROR);
+	EXPECT_NEAR(3.0*2.0 +  1.0*5.0 +  2.0* 6.0, p(1, 0), ROUNDED_ERROR);
+	EXPECT_NEAR(3.0*1.0 +  1.0*2.0 +  2.0*-1.0, p(1, 1), ROUNDED_ERROR);
+	EXPECT_NEAR(3.0*4.0 +  1.0*3.0 +  2.0* 3.0, p(1, 2), ROUNDED_ERROR);
+	EXPECT_NEAR(4.0*2.0 +  1.0*5.0 + -5.0* 6.0, p(2, 0), ROUNDED_ERROR);
+	EXPECT_NEAR(4.0*1.0 +  1.0*2.0 + -5.0*-1.0, p(2, 1), ROUNDED_ERROR);
+	EXPECT_NEAR(4.0*4.0 +  1.0*3.0 + -5.0* 3.0, p(2, 2), ROUNDED_ERROR);
+}
+
+TEST(MatrixTest, Product_of_2x3_matrix_and_3x3_matrix_should_be_2x3_matrix) {
+	const double ROUNDED_ERROR = 1.0e-14;
+	const int M1 = 2;
+	const int N1 = 3;
+	const int M2 = 3;
+	const int N2 = 3;
+	const double DATA1[] = {
+		1.0, 2.0, 3.0,
+		3.0, 1.0, 2.0
+	};
+	const double DATA2[] = {
+		2.0, 5.0, -4.0,
+		-1.0, 1.0, 1.0,
+		4.0, 6.0, -3.0
+	};
+	singular::Matrix< M1, N1 > m1;
+	m1.fill(DATA1);
+	singular::Matrix< M2, N2 > m2;
+	m2.fill(DATA2);
+	singular::Matrix< M1, N2 > p = m1 * m2;
+	EXPECT_NEAR(1.0* 2.0 + 2.0*-1.0 + 3.0* 4.0, p(0, 0), ROUNDED_ERROR);
+	EXPECT_NEAR(1.0* 5.0 + 2.0* 1.0 + 3.0* 6.0, p(0, 1), ROUNDED_ERROR);
+	EXPECT_NEAR(1.0*-4.0 + 2.0* 1.0 + 3.0*-3.0, p(0, 2), ROUNDED_ERROR);
+	EXPECT_NEAR(3.0* 2.0 + 1.0*-1.0 + 2.0* 4.0, p(1, 0), ROUNDED_ERROR);
+	EXPECT_NEAR(3.0* 5.0 + 1.0* 1.0 + 2.0* 6.0, p(1, 1), ROUNDED_ERROR);
+	EXPECT_NEAR(3.0*-4.0 + 1.0* 1.0 + 2.0*-3.0, p(1, 2), ROUNDED_ERROR);
+}
+
+TEST(MatrixTest, Product_of_4x3_matrix_and_3x3_matrix_should_be_4x3_matrix) {
+	const double ROUNDED_ERROR = 1.0e-14;
+	const int M1 = 4;
+	const int N1 = 3;
+	const int M2 = 3;
+	const int N2 = 3;
+	const double DATA1[] = {
+		1.0, 2.0, 3.0,
+		4.0, 3.0, -1.0,
+		2.0, -5.0, 4.0,
+		-1.0, 2.0, 2.0
+	};
+	const double DATA2[] = {
+		5.0, 2.0, 2.0,
+		-1.0, 4.0, 3.0,
+		2.0, 1.0, 6.0
+	};
+	singular::Matrix< M1, N1 > m1;
+	m1.fill(DATA1);
+	singular::Matrix< M2, N2 > m2;
+	m2.fill(DATA2);
+	singular::Matrix< M1, N2 > p = m1 * m2;
+	EXPECT_NEAR( 1.0*5.0 +  2.0*-1.0 +  3.0*2.0, p(0, 0), ROUNDED_ERROR);
+	EXPECT_NEAR( 1.0*2.0 +  2.0* 4.0 +  3.0*1.0, p(0, 1), ROUNDED_ERROR);
+	EXPECT_NEAR( 1.0*2.0 +  2.0* 3.0 +  3.0*6.0, p(0, 2), ROUNDED_ERROR);
+	EXPECT_NEAR( 4.0*5.0 +  3.0*-1.0 + -1.0*2.0, p(1, 0), ROUNDED_ERROR);
+	EXPECT_NEAR( 4.0*2.0 +  3.0* 4.0 + -1.0*1.0, p(1, 1), ROUNDED_ERROR);
+	EXPECT_NEAR( 4.0*2.0 +  3.0* 3.0 + -1.0*6.0, p(1, 2), ROUNDED_ERROR);
+	EXPECT_NEAR( 2.0*5.0 + -5.0*-1.0 +  4.0*2.0, p(2, 0), ROUNDED_ERROR);
+	EXPECT_NEAR( 2.0*2.0 + -5.0* 4.0 +  4.0*1.0, p(2, 1), ROUNDED_ERROR);
+	EXPECT_NEAR( 2.0*2.0 + -5.0* 3.0 +  4.0*6.0, p(2, 2), ROUNDED_ERROR);
+	EXPECT_NEAR(-1.0*5.0 +  2.0*-1.0 +  2.0*2.0, p(3, 0), ROUNDED_ERROR);
+	EXPECT_NEAR(-1.0*2.0 +  2.0* 4.0 +  2.0*1.0, p(3, 1), ROUNDED_ERROR);
+	EXPECT_NEAR(-1.0*2.0 +  2.0* 3.0 +  2.0*6.0, p(3, 2), ROUNDED_ERROR);
+}
+
+TEST(MatrixTest, Product_of_3x2_matrix_and_2x3_matrix_should_be_3x3_matrix) {
+	const double ROUNDED_ERROR = 1.0e-14;
+	const int M1 = 3;
+	const int N1 = 2;
+	const int M2 = 2;
+	const int N2 = 3;
+	const double DATA1[] = {
+		1.0, 2.0,
+		3.0, 4.0,
+		5.0, 6.0
+	};
+	const double DATA2[] = {
+		-1.0, 5.0, 4.0,
+		2.0, 1.0, -2.0
+	};
+	singular::Matrix< M1, N1 > m1;
+	m1.fill(DATA1);
+	singular::Matrix< M2, N2 > m2;
+	m2.fill(DATA2);
+	singular::Matrix< M1, N2 > p = m1 * m2;
+	EXPECT_NEAR(1.0*-1.0 + 2.0* 2.0, p(0, 0), ROUNDED_ERROR);
+	EXPECT_NEAR(1.0* 5.0 + 2.0* 1.0, p(0, 1), ROUNDED_ERROR);
+	EXPECT_NEAR(1.0* 4.0 + 2.0*-2.0, p(0, 2), ROUNDED_ERROR);
+	EXPECT_NEAR(3.0*-1.0 + 4.0* 2.0, p(1, 0), ROUNDED_ERROR);
+	EXPECT_NEAR(3.0* 5.0 + 4.0* 1.0, p(1, 1), ROUNDED_ERROR);
+	EXPECT_NEAR(3.0* 4.0 + 4.0*-2.0, p(1, 2), ROUNDED_ERROR);
+	EXPECT_NEAR(5.0*-1.0 + 6.0* 2.0, p(2, 0), ROUNDED_ERROR);
+	EXPECT_NEAR(5.0* 5.0 + 6.0* 1.0, p(2, 1), ROUNDED_ERROR);
+	EXPECT_NEAR(5.0* 4.0 + 6.0*-2.0, p(2, 2), ROUNDED_ERROR);
+}
+
+TEST(MatrixTest, Product_of_3x4_matrix_and_4x3_matrix_should_be_3x3_matrix) {
+	const double ROUNDED_ERROR = 1.0e-14;
+	const int M1 = 3;
+	const int N1 = 4;
+	const int M2 = 4;
+	const int N2 = 3;
+	const double DATA1[] = {
+		1.0, -2.0, 6.0, 3.0,
+		4.0, 5.0, -1.0, 2.0,
+		2.0, 3.0, -4.0, 1.0
+	};
+	const double DATA2[] = {
+		2.0, -5.0, 3.0,
+		1.0, 1.0, 2.0,
+		4.0, 3.0, 6.0,
+		2.0, 1.0, -2.0
+	};
+	singular::Matrix< M1, N1 > m1;
+	m1.fill(DATA1);
+	singular::Matrix< M2, N2 > m2;
+	m2.fill(DATA2);
+	singular::Matrix< M1, N2 > p = m1 * m2;
+	EXPECT_NEAR(1.0* 2.0 + -2.0*1.0 +  6.0*4.0 + 3.0* 2.0, p(0, 0), ROUNDED_ERROR);
+	EXPECT_NEAR(1.0*-5.0 + -2.0*1.0 +  6.0*3.0 + 3.0* 1.0, p(0, 1), ROUNDED_ERROR);
+	EXPECT_NEAR(1.0* 3.0 + -2.0*2.0 +  6.0*6.0 + 3.0*-2.0, p(0, 2), ROUNDED_ERROR);
+	EXPECT_NEAR(4.0* 2.0 +  5.0*1.0 + -1.0*4.0 + 2.0* 2.0, p(1, 0), ROUNDED_ERROR);
+	EXPECT_NEAR(4.0*-5.0 +  5.0*1.0 + -1.0*3.0 + 2.0* 1.0, p(1, 1), ROUNDED_ERROR);
+	EXPECT_NEAR(4.0* 3.0 +  5.0*2.0 + -1.0*6.0 + 2.0*-2.0, p(1, 2), ROUNDED_ERROR);
+	EXPECT_NEAR(2.0* 2.0 +  3.0*1.0 + -4.0*4.0 + 1.0* 2.0, p(2, 0), ROUNDED_ERROR);
+	EXPECT_NEAR(2.0*-5.0 +  3.0*1.0 + -4.0*3.0 + 1.0* 1.0, p(2, 1), ROUNDED_ERROR);
+	EXPECT_NEAR(2.0* 3.0 +  3.0*2.0 + -4.0*6.0 + 1.0*-2.0, p(2, 2), ROUNDED_ERROR);
+}
+
+TEST(MatrixTest, Product_of_3x3_matrix_and_3x2_matrix_should_be_3x2_matrix) {
+	const double ROUNDED_ERROR = 1.0e-14;
+	const int M1 = 3;
+	const int N1 = 3;
+	const int M2 = 3;
+	const int N2 = 2;
+	const double DATA1[] = {
+		6.0, 2.0, -3.0,
+		1.0, 5.0, 4.0,
+		4.0, 3.0, -1.0
+	};
+	const double DATA2[] = {
+		3.0, 2.0,
+		1.0, -2.0,
+		4.0, 5.0
+	};
+	singular::Matrix< M1, N1 > m1;
+	m1.fill(DATA1);
+	singular::Matrix< M2, N2 > m2;
+	m2.fill(DATA2);
+	singular::Matrix< M1, N2 > p = m1 * m2;
+	EXPECT_NEAR(6.0*3.0 + 2.0* 1.0 + -3.0*4.0, p(0, 0), ROUNDED_ERROR);
+	EXPECT_NEAR(6.0*2.0 + 2.0*-2.0 + -3.0*5.0, p(0, 1), ROUNDED_ERROR);
+	EXPECT_NEAR(1.0*3.0 + 5.0* 1.0 +  4.0*4.0, p(1, 0), ROUNDED_ERROR);
+	EXPECT_NEAR(1.0*2.0 + 5.0*-2.0 +  4.0*5.0, p(1, 1), ROUNDED_ERROR);
+	EXPECT_NEAR(4.0*3.0 + 3.0* 1.0 + -1.0*4.0, p(2, 0), ROUNDED_ERROR);
+	EXPECT_NEAR(4.0*2.0 + 3.0*-2.0 + -1.0*5.0, p(2, 1), ROUNDED_ERROR);
+}
+
+TEST(MatrixTest, Product_of_3x3_matrix_and_3x4_matrix_should_be_3x4_matrix) {
+	const double ROUNDED_ERROR = 1.0e-14;
+	const int M1 = 3;
+	const int N1 = 3;
+	const int M2 = 3;
+	const int N2 = 4;
+	const double DATA1[] = {
+		3.0, -2.0, 1.0,
+		2.0, -1.0, 4.0,
+		-1.0, -3.0, 5.0
+	};
+	const double DATA2[] = {
+		-4.0, 1.0, 5.0, 3.0,
+		1.0, 2.0, 1.0, 2.0,
+		-2.0, 3.0, 6.0, 1.0
+	};
+	singular::Matrix< M1, N1 > m1;
+	m1.fill(DATA1);
+	singular::Matrix< M2, N2 > m2;
+	m2.fill(DATA2);
+	singular::Matrix< M1, N2 > p = m1 * m2;
+	EXPECT_NEAR( 3.0*-4.0 + -2.0*1.0 + 1.0*-2.0, p(0, 0), ROUNDED_ERROR);
+	EXPECT_NEAR( 3.0* 1.0 + -2.0*2.0 + 1.0* 3.0, p(0, 1), ROUNDED_ERROR);
+	EXPECT_NEAR( 3.0* 5.0 + -2.0*1.0 + 1.0* 6.0, p(0, 2), ROUNDED_ERROR);
+	EXPECT_NEAR( 3.0* 3.0 + -2.0*2.0 + 1.0* 1.0, p(0, 3), ROUNDED_ERROR);
+	EXPECT_NEAR( 2.0*-4.0 + -1.0*1.0 + 4.0*-2.0, p(1, 0), ROUNDED_ERROR);
+	EXPECT_NEAR( 2.0* 1.0 + -1.0*2.0 + 4.0* 3.0, p(1, 1), ROUNDED_ERROR);
+	EXPECT_NEAR( 2.0* 5.0 + -1.0*1.0 + 4.0* 6.0, p(1, 2), ROUNDED_ERROR);
+	EXPECT_NEAR( 2.0* 3.0 + -1.0*2.0 + 4.0* 1.0, p(1, 3), ROUNDED_ERROR);
+	EXPECT_NEAR(-1.0*-4.0 + -3.0*1.0 + 5.0*-2.0, p(2, 0), ROUNDED_ERROR);
+	EXPECT_NEAR(-1.0* 1.0 + -3.0*2.0 + 5.0* 3.0, p(2, 1), ROUNDED_ERROR);
+	EXPECT_NEAR(-1.0* 5.0 + -3.0*1.0 + 5.0* 6.0, p(2, 2), ROUNDED_ERROR);
+	EXPECT_NEAR(-1.0* 3.0 + -3.0*2.0 + 5.0* 1.0, p(2, 3), ROUNDED_ERROR);
+}
+
+TEST(MatrixTest, Transposition_of_3x3_matrix_should_be_3x3_matrix) {
+	const int M = 3;
+	const int N = 3;
+	const double DATA[] = {
+		1.0, 2.0, 3.0,
+		4.0, 5.0, 6.0,
+		7.0, 8.0, 9.0
+	};
+	singular::Matrix< M, N > m;
+	m.fill(DATA);
+	singular::Matrix< N, M > mT = m.transpose();
+	EXPECT_EQ(1.0, mT(0, 0));
+	EXPECT_EQ(4.0, mT(0, 1));
+	EXPECT_EQ(7.0, mT(0, 2));
+	EXPECT_EQ(2.0, mT(1, 0));
+	EXPECT_EQ(5.0, mT(1, 1));
+	EXPECT_EQ(8.0, mT(1, 2));
+	EXPECT_EQ(3.0, mT(2, 0));
+	EXPECT_EQ(6.0, mT(2, 1));
+	EXPECT_EQ(9.0, mT(2, 2));
+}
+
+TEST(MatrixTest, Transposition_of_3x2_matrix_should_be_2x3_matrix) {
+	const int M = 3;
+	const int N = 2;
+	const double DATA[] = {
+		1.0, 4.0,
+		2.0, 5.0,
+		3.0, 6.0
+	};
+	singular::Matrix< M, N > m;
+	m.fill(DATA);
+	singular::Matrix< N, M > mT = m.transpose();
+	EXPECT_EQ(1.0, mT(0, 0));
+	EXPECT_EQ(2.0, mT(0, 1));
+	EXPECT_EQ(3.0, mT(0, 2));
+	EXPECT_EQ(4.0, mT(1, 0));
+	EXPECT_EQ(5.0, mT(1, 1));
+	EXPECT_EQ(6.0, mT(1, 2));
+}
+
+TEST(MatrixTest, Transposition_of_2x3_matrix_should_be_3x2_matrix) {
+	const int M = 2;
+	const int N = 3;
+	const double DATA[] = {
+		1.0, -2.0, 3.0,
+		-4.0, 5.0, -6.0
+	};
+	singular::Matrix< M, N > m;
+	m.fill(DATA);
+	singular::Matrix< N, M > mT = m.transpose();
+	EXPECT_EQ(1.0, mT(0, 0));
+	EXPECT_EQ(-4.0, mT(0, 1));
+	EXPECT_EQ(-2.0, mT(1, 0));
+	EXPECT_EQ(5.0, mT(1, 1));
+	EXPECT_EQ(3.0, mT(2, 0));
+	EXPECT_EQ(-6.0, mT(2, 1));
+}

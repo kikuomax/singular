@@ -19,8 +19,16 @@ namespace singular {
 	template < int M, int N >
 	class Matrix {
 	private:
-		/** Memory block for this matrix. */
+		/**
+		 * Memory block for this matrix.
+		 *
+		 * Element at the row `i` and column `j` is given by
+		 * `pBlock[i * N + j]`.
+		 */
 		double* pBlock;
+
+		// transposed matrix is a friend
+		friend class Matrix< N, M >;
 	public:
 		/** Initializes a zero matrix. */
 		Matrix() {
@@ -97,12 +105,12 @@ namespace singular {
 
 		/** Returns the value at a given row and column. */
 		inline double operator ()(int i, int j) const {
-			return this->pBlock[i * N + j];
+			return this->pBlock[idx(i, j)];
 		}
 
 		/** Returns the value at a given row and column. */
 		inline double& operator ()(int i, int j) {
-			return this->pBlock[i * N + j];
+			return this->pBlock[idx(i, j)];
 		}
 
 		/**
@@ -142,12 +150,66 @@ namespace singular {
 		Matrix< M, N >& fill(const double values[]) {
 			for (int i = 0; i < M; ++i) {
 				for (int j = 0; j < N; ++j) {
-					this->pBlock[i * N + j] = values[i * N + j];
+					this->pBlock[idx(i, j)] = values[idx(i, j)];
 				}
 			}
 			return *this;
 		}
+
+		/**
+		 * Multiplies this matrix and a given matrix.
+		 *
+		 * @tparam
+		 *     Number of columns in the right-hand-side matrix.
+		 * @param rhs
+		 *     Right-hand side of the multiplication.
+		 * @return
+		 *     Product of this matrix and `rhs`.
+		 */
+		template < int L >
+		Matrix< M, L > operator *(const Matrix< N, L >& rhs) const {
+			Matrix< M, L > p;
+			for (int i = 0; i < M; ++i) {
+				for (int j = 0; j < L; ++j) {
+					double x = 0.0;
+					for (int k = 0; k < N; ++k) {
+						x += (*this)(i, k) * rhs(k, j);
+					}
+					p(i, j) = x;
+				}
+			}
+			return p;
+		}
+
+		/**
+		 * Returns the transposition of this matrix.
+		 *
+		 * @return
+		 *     Transposition of this matrix.
+		 */
+		Matrix< N, M > transpose() const {
+			double* pBlock = new double[M * N];
+			const double* pSrc = this->pBlock;
+			for (int i = 0; i < M; ++i){
+				double* pDst = pBlock + i;
+				for (int j = 0; j < N; ++j) {
+					*pDst = *pSrc;
+					++pSrc;
+					pDst += M;
+				}
+			}
+			return Matrix< N, M >(pBlock);
+		}
 	private:
+		/**
+		 * Initializes with a given memory block.
+		 *
+		 * @param pBlock
+		 *     Memory block of the new matrix.
+		 *     Must have at least M * N elements.
+		 */
+		Matrix(double* pBlock) : pBlock(pBlock) {}
+
 		/**
 		 * Releases the memory block of this matrix.
 		 *
@@ -156,6 +218,13 @@ namespace singular {
 		inline void release() {
 			delete[] this->pBlock;
 			this->pBlock = 0;
+		}
+
+		/**
+		 * Returns the index corresponding to a given pair of a row and column.
+		 */
+		static inline int idx(int row, int column) {
+			return row * N + column;
 		}
 	};
 
