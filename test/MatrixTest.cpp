@@ -417,3 +417,155 @@ TEST(MatrixTest, Transposition_of_2x3_matrix_should_be_3x2_matrix) {
 	EXPECT_EQ(3.0, mT(2, 0));
 	EXPECT_EQ(-6.0, mT(2, 1));
 }
+
+TEST(MatrixTest, Rows_of_3x3_matrix_can_be_shuffled) {
+	const int M = 3;
+	const int N = 3;
+	const double DATA[] = {
+		1.0, 2.0, 3.0,
+		4.0, 5.0, 6.0,
+		7.0, 8.0, 9.0
+	};
+	const int ORDER[] = { 2, 1, 0 };
+	singular::Matrix< M, N > m;
+	m.fill(DATA);
+	singular::Matrix< M, N > mS = m.shuffleRows(ORDER);
+	EXPECT_EQ(7.0, mS(0, 0));
+	EXPECT_EQ(8.0, mS(0, 1));
+	EXPECT_EQ(9.0, mS(0, 2));
+	EXPECT_EQ(4.0, mS(1, 0));
+	EXPECT_EQ(5.0, mS(1, 1));
+	EXPECT_EQ(6.0, mS(1, 2));
+	EXPECT_EQ(1.0, mS(2, 0));
+	EXPECT_EQ(2.0, mS(2, 1));
+	EXPECT_EQ(3.0, mS(2, 2));
+}
+
+TEST(MatrixTest, Rows_of_4x3_matrix_can_be_shuffled) {
+	const int M = 4;
+	const int N = 3;
+	const double DATA[] = {
+		1.0, 5.0, 9.0,
+		2.0, 6.0, 10.0,
+		3.0, 7.0, 11.0,
+		4.0, 8.0, 12.0
+	};
+	const int ORDER[] = { 0, 3, 1, 2 };
+	singular::Matrix< M, N > m;
+	m.fill(DATA);
+	singular::Matrix< M, N > mS = m.shuffleRows(ORDER);
+	EXPECT_EQ(1.0, mS(0, 0));
+	EXPECT_EQ(5.0, mS(0, 1));
+	EXPECT_EQ(9.0, mS(0, 2));
+	EXPECT_EQ(4.0, mS(1, 0));
+	EXPECT_EQ(8.0, mS(1, 1));
+	EXPECT_EQ(12.0, mS(1, 2));
+	EXPECT_EQ(2.0, mS(2, 0));
+	EXPECT_EQ(6.0, mS(2, 1));
+	EXPECT_EQ(10.0, mS(2, 2));
+	EXPECT_EQ(3.0, mS(3, 0));
+	EXPECT_EQ(7.0, mS(3, 1));
+	EXPECT_EQ(11.0, mS(3, 2));
+}
+
+TEST(MatrixTest, Rows_of_3x4_matrix_can_be_shuffled) {
+	const int M = 3;
+	const int N = 4;
+	const double DATA[] = {
+		1.0, 3.0, 5.0, 7.0,
+		8.0, 6.0, 4.0, 2.0,
+		9.0, 10.0, 11.0, 12.0
+	};
+	const int ORDER[] = { 1, 2, 0 };
+	singular::Matrix< M, N > m;
+	m.fill(DATA);
+	singular::Matrix< M, N > mS = m.shuffleRows(ORDER);
+	EXPECT_EQ(8.0, mS(0, 0));
+	EXPECT_EQ(6.0, mS(0, 1));
+	EXPECT_EQ(4.0, mS(0, 2));
+	EXPECT_EQ(2.0, mS(0, 3));
+	EXPECT_EQ(9.0, mS(1, 0));
+	EXPECT_EQ(10.0, mS(1, 1));
+	EXPECT_EQ(11.0, mS(1, 2));
+	EXPECT_EQ(12.0, mS(1, 3));
+	EXPECT_EQ(1.0, mS(2, 0));
+	EXPECT_EQ(3.0, mS(2, 1));
+	EXPECT_EQ(5.0, mS(2, 2));
+	EXPECT_EQ(7.0, mS(2, 3));
+}
+
+TEST(MatrixTest, Columns_of_3x3_matrix_can_be_shuffled) {
+	const int M = 3;
+	const int N = 3;
+	const double DATA[] = {
+		1.0, 2.0, 3.0,
+		4.0, 5.0, 6.0,
+		7.0, 8.0, 9.0
+	};
+	const int ORDER[] = { 2, 1, 0 };
+	singular::Matrix< M, N > m;
+	m.fill(DATA);
+	singular::Matrix< M, N > mS = m.shuffleColumns(ORDER);
+	EXPECT_EQ(3.0, mS(0, 0));
+	EXPECT_EQ(6.0, mS(1, 0));
+	EXPECT_EQ(9.0, mS(2, 0));
+	EXPECT_EQ(2.0, mS(0, 1));
+	EXPECT_EQ(5.0, mS(1, 1));
+	EXPECT_EQ(8.0, mS(2, 1));
+	EXPECT_EQ(1.0, mS(0, 2));
+	EXPECT_EQ(4.0, mS(1, 2));
+	EXPECT_EQ(7.0, mS(2, 2));
+}
+
+TEST(MatrixTest, Columns_of_4x3_matrix_can_be_shuffled) {
+	const int M = 4;
+	const int N = 3;
+	const double DATA[] = {
+		1.0, 5.0, 9.0,
+		2.0, 6.0, 10.0,
+		3.0, 7.0, 11.0,
+		4.0, 8.0, 12.0
+	};
+	const int ORDER[] = { 1, 2, 0 };
+	singular::Matrix< M, N > m;
+	m.fill(DATA);
+	singular::Matrix< M, N > mS = m.shuffleColumns(ORDER);
+	EXPECT_EQ(5.0, mS(0, 0));
+	EXPECT_EQ(6.0, mS(1, 0));
+	EXPECT_EQ(7.0, mS(2, 0));
+	EXPECT_EQ(8.0, mS(3, 0));
+	EXPECT_EQ(9.0, mS(0, 1));
+	EXPECT_EQ(10.0, mS(1, 1));
+	EXPECT_EQ(11.0, mS(2, 1));
+	EXPECT_EQ(12.0, mS(3, 1));
+	EXPECT_EQ(1.0, mS(0, 2));
+	EXPECT_EQ(2.0, mS(1, 2));
+	EXPECT_EQ(3.0, mS(2, 2));
+	EXPECT_EQ(4.0, mS(3, 2));
+}
+
+TEST(MatrixTest, Columns_of_3x4_matrix_can_be_shuffled) {
+	const int M = 3;
+	const int N = 4;
+	const double DATA[] = {
+		1.0, 3.0, 5.0, 7.0,
+		8.0, 6.0, 4.0, 2.0,
+		9.0, 10.0, 11.0, 12.0
+	};
+	const int ORDER[] = { 0, 3, 1, 2 };
+	singular::Matrix< M, N > m;
+	m.fill(DATA);
+	singular::Matrix< M, N > mS = m.shuffleColumns(ORDER);
+	EXPECT_EQ(1.0, mS(0, 0));
+	EXPECT_EQ(8.0, mS(1, 0));
+	EXPECT_EQ(9.0, mS(2, 0));
+	EXPECT_EQ(7.0, mS(0, 1));
+	EXPECT_EQ(2.0, mS(1, 1));
+	EXPECT_EQ(12.0, mS(2, 1));
+	EXPECT_EQ(3.0, mS(0, 2));
+	EXPECT_EQ(6.0, mS(1, 2));
+	EXPECT_EQ(10.0, mS(2, 2));
+	EXPECT_EQ(5.0, mS(0, 3));
+	EXPECT_EQ(4.0, mS(1, 3));
+	EXPECT_EQ(11.0, mS(2, 3));
+}

@@ -200,6 +200,70 @@ namespace singular {
 			}
 			return Matrix< N, M >(pBlock);
 		}
+
+		/**
+		 * Shuffles rows in this matrix.
+		 *
+		 * Equivalent to multiplying the following permutation matrix \f$P\f$
+		 * from the left of this matrix.
+		 *
+		 * \f[
+		 * P_{ij} =
+		 *   \left{
+		 *     \begin{array}{ll}
+		 *       1 & (order[i] = j) \\
+		 *       0 & (order[i] \neq j)
+		 *     \end{array}
+		 *   \right.
+		 * \f]
+		 *
+		 * @param order
+		 *     New order of rows.
+		 *     Must have at least M elements.
+		 * @return
+		 *     Matrix shuffled in the given order.
+		 */
+		Matrix< M, N > shuffleRows(const int order[]) const {
+			Matrix< M, N > s;
+			for (int i = 0; i < M; ++i) {
+				for (int j = 0; j < N; ++j) {
+					s(i, j) = (*this)(order[i], j);
+				}
+			}
+			return s;
+		}
+
+		/**
+		 * Shuffles columns in this matrix.
+		 *
+		 * Equivalent to multiplying the following permutation matrix \f$P\f$
+		 * from the right of this matrix.
+		 *
+		 * \f[
+		 * P_{ij} =
+		 *   \left{
+		 *     \begin{array}{ll}
+		 *       1 & (i = order[j]) \\
+		 *       0 & (i \neq order[j])
+		 *     \end{array}
+		 *   \right.
+		 * \f]
+		 *
+		 * @param order
+		 *     New order of columns.
+		 *     Must have at least N elements.
+		 * @return
+		 *     Matrix shuffled in the given order.
+		 */
+		Matrix< M, N > shuffleColumns(const int order[]) const {
+			Matrix< M, N > s;
+			for (int i = 0; i < M; ++i) {
+				for (int j = 0; j < N; ++j) {
+					s(i, j) = (*this)(i, order[j]);;
+				}
+			}
+			return s;
+		}
 	private:
 		/**
 		 * Initializes with a given memory block.
