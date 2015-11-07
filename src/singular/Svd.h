@@ -5,6 +5,7 @@
 #include "singular/Reflector.h"
 #include "singular/Rotator.h"
 
+#include <cassert>
 #include <iostream>
 #include <tuple>
 
@@ -31,29 +32,17 @@ namespace singular {
 							Matrix< N, N > > USV;
 
 		/** Returns the left singular vectors from a given `USV` tuple. */
-		static inline
-		const Matrix< M, M >& getU(const std::tuple< Matrix< M, M >,
-													 Matrix< M, N >,
-													 Matrix< N, N > >& usv)
-		{
+		static inline const Matrix< M, M >& getU(const USV& usv) {
 			return std::get< 0 >(usv);
 		}
 
 		/** Returns the singular values from a given `USV` tuple. */
-		static inline
-		const Matrix< M, N >& getS(const std::tuple< Matrix< M, M >,
-													 Matrix< M, N >,
-													 Matrix< N, N > >& usv)
-		{
+		static inline const Matrix< M, N >& getS(const USV& usv) {
 			return std::get< 1 >(usv);
 		}
 
 		/** Returns the right singular vectors from a given `USV` tuple. */
-		static inline
-		const Matrix< N, N >& getV(const std::tuple< Matrix< M, M >,
-													 Matrix< M, N >,
-													 Matrix< N, N > >& usv)
-		{
+		static inline const Matrix< N, N >& getV(const USV& usv) {
 			return std::get< 2 >(usv);
 		}
 
@@ -70,6 +59,17 @@ namespace singular {
 		 * @see getV
 		 */
 		static USV decomposeUSV(const Matrix< M, N >& m) {
+			// makes sure that M >= N
+			// otherwise decomposes the transposed matrix
+			if (M < N) {
+				// A^T = V * S^T * U^T
+				typename Svd< N, M >::USV usvT =
+					Svd< N, M >::decomposeUSV(m.transpose());
+				return std::make_tuple(
+					std::move(std::get< 2 >(usvT)),
+					std::get< 1 >(usvT).transpose(),
+					std::move(std::get< 0 >(usvT)));
+			}
 			const int MAX_ITERATIONS = N * 10;
 			// allocates matrices
 			Matrix< M, M > u = Matrix< M, M >::identity();
@@ -90,11 +90,64 @@ namespace singular {
 					}
 				}
 			}
-			return std::make_tuple(std::move(u), std::move(s), std::move(v));
+			// makes all singular values positive
+			for (int i = 0; i < N; ++i) {
+				if (s(i, i) < 0) {
+					s(i, i) = -s(i, i);
+					// inverts the sign of the right singular vector
+					for (int j = 0; j < N; ++j) {
+						v(j, i) = -v(j, i);
+					}
+				}
+			}
+			// sorts singular values in descending order
+			int shuffle[N];
+			bool sortNeeded = false;
+			for (int i = 0; i < N; ++i) {
+				shuffle[i] = i;
+				sortNeeded =
+					sortNeeded || (i + 1 < N && s(i, i) < s(i + 1, i + 1));
+			}
+			if (sortNeeded) {
+				for (int i = 0; i < N - 1; ++i) {
+					// locates the ith largest singular value
+					double mx = s(shuffle[i], shuffle[i]);
+					int mxJ = i;
+					for (int j = i + 1; j < N; ++j) {
+						double sv = s(shuffle[j], shuffle[j]);
+						if (sv > mx) {
+							mx = sv;
+							mxJ = j;
+						}
+					}
+					// brings the ith largest singular value at (i, i)
+					/*
+					{
+						double tmp = s(i, i);
+						s(i, i) = s(mxJ, mxJ);
+						s(mxJ, mxJ) = tmp;
+					}*/
+					{
+						int tmp = shuffle[i];
+						shuffle[i] = shuffle[mxJ];
+						shuffle[mxJ] = tmp;
+					}
+				}
+				return std::make_tuple(u.shuffleColumns(shuffle),
+									   s.shuffleColumns(shuffle).shuffleRows(shuffle),
+									   v.shuffleColumns(shuffle));
+			} else {
+				return std::make_tuple(std::move(u),
+									   std::move(s),
+									   std::move(v));
+			}
 		}
-
+	private:
 		/**
 		 * Bindiagonalizes a given matrix.
+		 *
+		 * `M` must be greater than or equal to `N`.
+		 * The behavior is undefined if `M < N`.
 		 *
 		 * @param[in,out] u
 		 *     Left singular vectors to be upated.
@@ -107,6 +160,7 @@ namespace singular {
 								  Matrix< M, N >& m,
 								  Matrix< N, N >& v)
 		{
+			assert(M >= N);
 			for (int i = 0; i < N; ++i) {
 				// applies a householder transform to the column vector i
 				Reflector< M > rU(m.column(i).slice(i));
@@ -127,6 +181,9 @@ namespace singular {
 		 * Submatrices other than the top-left `n` x `n` submatrix of `m` are
 		 * regarded as already converged.
 		 *
+		 * `M` must be greater than or equal to `N`.
+		 * The behavior is undefined if `M < N`.
+		 *
 		 * @param[in,out] u
 		 *     Left singular vectors to be updated.
 		 * @param[in,out] m
@@ -143,6 +200,7 @@ namespace singular {
 							  Matrix< N, N >& v,
 							  int n)
 		{
+			assert(M >= N);
 			// calculates the shift
 			double rho = calculateShift(m, n);
 			// applies the first right rotator
@@ -178,6 +236,9 @@ namespace singular {
 		 * Submatrices other than top-left `n` x `n` submatrix of `m` are
 		 * regarded as already converged.
 		 *
+		 * `M` must be greater than or equal to `N`.
+		 * The behavior is undefined if `M < N`.
+		 *
 		 * @param m
 		 *     Bidiagonal matrix from which a shift is to be calculated.
 		 * @param n
@@ -186,6 +247,7 @@ namespace singular {
 		 *     Shift for the top-left `n` x `n` submatrix of `m`.
 		 */
 		static double calculateShift(const Matrix< M, N >& m, int n) {
+			assert(M >= N);
 			double b1 = m(n - 2, n - 2);
 			double b2 = m(n - 1, n - 1);
 			double g1 = m(n - 2, n - 1);
