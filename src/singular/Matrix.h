@@ -82,9 +82,9 @@ namespace singular {
 		 *     Clone of this matrix.
 		 */
 		Matrix< M, N > clone() const {
-			Matrix cloneM;
-			memcpy(cloneM.pBlock, this->pBlock, sizeof(double) * M * N);
-			return cloneM;
+			double* pBlock = new double[M * N];
+			std::copy(this->pBlock, this->pBlock + M * N, pBlock);
+			return Matrix< M, N >(pBlock);
 		}
 
 		/**
@@ -97,20 +97,22 @@ namespace singular {
 		 */
 		static Matrix< M, N > identity() {
 			Matrix< M, M > eye;
+			double* pDst = eye.pBlock;
 			for (int i = 0; i < M; ++i) {
-				eye(i, i) = 1;
+				*pDst = 1;
+				pDst += N + 1;
 			}
-			return eye;  // compile error if M != N
+			return eye;  // compile error if M != N*/
 		}
 
 		/** Returns the value at a given row and column. */
 		inline double operator ()(int i, int j) const {
-			return this->pBlock[idx(i, j)];
+			return this->pBlock[i * N + j];
 		}
 
 		/** Returns the value at a given row and column. */
 		inline double& operator ()(int i, int j) {
-			return this->pBlock[idx(i, j)];
+			return this->pBlock[i * N + j];
 		}
 
 		/**
@@ -148,37 +150,48 @@ namespace singular {
 		 *     Must have at least `M * N` valid elements.
 		 */
 		Matrix< M, N >& fill(const double values[]) {
-			for (int i = 0; i < M; ++i) {
-				for (int j = 0; j < N; ++j) {
-					this->pBlock[idx(i, j)] = values[idx(i, j)];
-				}
-			}
+			std::copy(values, values + M * N, this->pBlock);
 			return *this;
 		}
 
 		/**
-		 * Multiplies this matrix and a given matrix.
+		 * Multiplies given two matrices.
 		 *
-		 * @tparam
+		 * @tparam M2
+		 *     Number of rows in the left-hand-side matrix.
+		 * @tparam N2
+		 *     Number of columns in the left-hand-side matrix.
+		 *     Number of rows in the right-hand-side matrix as well.
+		 * @tparam L
 		 *     Number of columns in the right-hand-side matrix.
+		 * @param lhs
+		 *     Left-hand side of the multiplication.
 		 * @param rhs
 		 *     Right-hand side of the multiplication.
 		 * @return
-		 *     Product of this matrix and `rhs`.
+		 *     Product of `lhs` and `rhs`.
 		 */
-		template < int L >
-		Matrix< M, L > operator *(const Matrix< N, L >& rhs) const {
-			Matrix< M, L > p;
-			for (int i = 0; i < M; ++i) {
-				for (int j = 0; j < L; ++j) {
+		template < int M2, int N2, int L >
+		friend Matrix< M2, L > operator *(const Matrix< M2, N2 >& lhs,
+										  const Matrix< N2, L >& rhs)
+		{
+			double* pBlock = new double[M2 * L];
+			double* pDst = pBlock;
+			for (int i = 0; i < M2; ++i) {
+				for (int l = 0; l < L; ++l) {
+					double* pL = lhs.pBlock + i * N2;
+					double* pR = rhs.pBlock + l;
 					double x = 0.0;
-					for (int k = 0; k < N; ++k) {
-						x += (*this)(i, k) * rhs(k, j);
+					for (int j = 0; j < N2; ++j) {
+						x += *pL * *pR;
+						++pL;
+						pR += L;
 					}
-					p(i, j) = x;
+					*pDst = x;
+					++pDst;
 				}
 			}
-			return p;
+			return Matrix< M2, L >(pBlock);
 		}
 
 		/**
@@ -224,13 +237,14 @@ namespace singular {
 		 *     Matrix shuffled in the given order.
 		 */
 		Matrix< M, N > shuffleRows(const int order[]) const {
-			Matrix< M, N > s;
+			double* pBlock = new double[M * N];
+			double* pDst = pBlock;
 			for (int i = 0; i < M; ++i) {
-				for (int j = 0; j < N; ++j) {
-					s(i, j) = (*this)(order[i], j);
-				}
+				double* pSrc = this->pBlock + order[i] * N;
+				std::copy(pSrc, pSrc + N, pDst);
+				pDst += N;
 			}
-			return s;
+			return Matrix< M, N >(pBlock);
 		}
 
 		/**
@@ -256,13 +270,17 @@ namespace singular {
 		 *     Matrix shuffled in the given order.
 		 */
 		Matrix< M, N > shuffleColumns(const int order[]) const {
-			Matrix< M, N > s;
-			for (int i = 0; i < M; ++i) {
-				for (int j = 0; j < N; ++j) {
-					s(i, j) = (*this)(i, order[j]);;
+			double* pBlock = new double[M * N];
+			for (int j = 0; j < N; ++j) {
+				double* pDst = pBlock + j;
+				double* pSrc = this->pBlock + order[j];
+				for (int i = 0; i < M; ++i) {
+					*pDst = *pSrc;
+					pSrc += N;
+					pDst += N;
 				}
 			}
-			return s;
+			return Matrix< M, N >(pBlock);
 		}
 	private:
 		/**
@@ -282,13 +300,6 @@ namespace singular {
 		inline void release() {
 			delete[] this->pBlock;
 			this->pBlock = 0;
-		}
-
-		/**
-		 * Returns the index corresponding to a given pair of a row and column.
-		 */
-		static inline int idx(int row, int column) {
-			return row * N + column;
 		}
 	};
 

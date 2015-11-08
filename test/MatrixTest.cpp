@@ -83,6 +83,53 @@ TEST(MatrixTest, 3x4_matrix_can_be_filled) {
 	EXPECT_EQ(2.5, m(3, 2));
 }
 
+TEST(MatrixTest, 3x3_matrix_can_be_cloned) {
+	const int M = 3;
+	const int N = 3;
+	const double DATA[] = {
+		1.0, 2.0, 3.0,
+		4.0, 5.0, 6.0,
+		7.0, 8.0, 9.0
+	};
+	singular::Matrix< M, N > m;
+	m.fill(DATA);
+	singular::Matrix< M, N > mC = m.clone();
+	EXPECT_EQ(1.0, mC(0, 0));
+	EXPECT_EQ(2.0, mC(0, 1));
+	EXPECT_EQ(3.0, mC(0, 2));
+	EXPECT_EQ(4.0, mC(1, 0));
+	EXPECT_EQ(5.0, mC(1, 1));
+	EXPECT_EQ(6.0, mC(1, 2));
+	EXPECT_EQ(7.0, mC(2, 0));
+	EXPECT_EQ(8.0, mC(2, 1));
+	EXPECT_EQ(9.0, mC(2, 2));
+}
+
+TEST(MatrixTest, 3x4_matrix_can_be_cloned) {
+	const int M = 3;
+	const int N = 4;
+	const double DATA[] = {
+		1.0, 4.0, -7.0, 10.0,
+		3.0, -6.0, 9.0, 12.0,
+		-2.0, 5.0, 8.0, -11.0
+	};
+	singular::Matrix< M, N > m;
+	m.fill(DATA);
+	singular::Matrix< M, N > mC = m.clone();
+	EXPECT_EQ(1.0, mC(0, 0));
+	EXPECT_EQ(4.0, mC(0, 1));
+	EXPECT_EQ(-7.0, mC(0, 2));
+	EXPECT_EQ(10.0, mC(0, 3));
+	EXPECT_EQ(3.0, mC(1, 0));
+	EXPECT_EQ(-6.0, mC(1, 1));
+	EXPECT_EQ(9.0, mC(1, 2));
+	EXPECT_EQ(12.0, mC(1, 3));
+	EXPECT_EQ(-2.0, mC(2, 0));
+	EXPECT_EQ(5.0, mC(2, 1));
+	EXPECT_EQ(8.0, mC(2, 2));
+	EXPECT_EQ(-11.0, mC(2, 3));
+}
+
 TEST(MatrixTest, Matrix_can_provide_row_vectors) {
 	const int M = 4;
 	const int N = 3;
