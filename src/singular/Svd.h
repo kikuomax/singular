@@ -78,16 +78,21 @@ namespace singular {
 			// bidiagonalizes a given matrix
 			bidiagonalize(u, s, v);
 			// repeats Francis iteration
+			int iteration = 0;
 			int n = N;
-			for (int i = 0; i < MAX_ITERATIONS; ++i) {
-				doFrancis(u, s, v, n);
-				// checks the convergence
-				if (std::abs(s(n - 2, n - 1) / s(n - 1, n - 1)) < 1.0e-15) {
+			while (n >= 2) {
+				// processes the n-1 x n-1 submatrix
+				// if the current n x n submatrix has converged
+				double bn = s(n - 1, n - 1);
+				if (bn == 0.0 || std::abs(s(n - 2, n - 1) / bn) < 1.0e-15) {
 					--n;
-					if (n < 2) {
-						std::cout << "iteration: " << i << std::endl;
+				} else {
+					// aborts if iterations are too many
+					++iteration;
+					if (iteration > MAX_ITERATIONS) {
 						break;
 					}
+					doFrancis(u, s, v, n);
 				}
 			}
 			// makes all singular values positive
@@ -101,12 +106,12 @@ namespace singular {
 				}
 			}
 			// sorts singular values in descending order
-			int shuffle[N];
+			int shuffle[M];  // M >= N
 			bool sortNeeded = false;
-			for (int i = 0; i < N; ++i) {
+			for (int i = 0; i < M; ++i) {
 				shuffle[i] = i;
 				sortNeeded =
-					sortNeeded || (i + 1 < N && s(i, i) < s(i + 1, i + 1));
+					sortNeeded || (i < N - 1 && s(i, i) < s(i + 1, i + 1));
 			}
 			if (sortNeeded) {
 				for (int i = 0; i < N - 1; ++i) {
@@ -121,17 +126,9 @@ namespace singular {
 						}
 					}
 					// brings the ith largest singular value at (i, i)
-					/*
-					{
-						double tmp = s(i, i);
-						s(i, i) = s(mxJ, mxJ);
-						s(mxJ, mxJ) = tmp;
-					}*/
-					{
-						int tmp = shuffle[i];
-						shuffle[i] = shuffle[mxJ];
-						shuffle[mxJ] = tmp;
-					}
+					int tmp = shuffle[i];
+					shuffle[i] = shuffle[mxJ];
+					shuffle[mxJ] = tmp;
 				}
 				return std::make_tuple(u.shuffleColumns(shuffle),
 									   s.shuffleColumns(shuffle).shuffleRows(shuffle),
@@ -166,7 +163,7 @@ namespace singular {
 				Reflector< M > rU(m.column(i).slice(i));
 				m = rU.applyFromLeftTo(m);
 				u = rU.applyFromRightTo(u);
-				if (i + 1 < N) {
+				if (i < N - 1) {
 					// applies a householder transform to the row vector i + 1
 					Reflector< N > rV(m.row(i).slice(i + 1));
 					m = rV.applyFromRightTo(m);
@@ -184,6 +181,8 @@ namespace singular {
 		 * `M` must be greater than or equal to `N`.
 		 * The behavior is undefined if `M < N`.
 		 *
+		 * The behavior is undefined if `n < 2`.
+		 *
 		 * @param[in,out] u
 		 *     Left singular vectors to be updated.
 		 * @param[in,out] m
@@ -193,7 +192,8 @@ namespace singular {
 		 *     Right singular vectors to be updated.
 		 * @param n
 		 *     Size of the submatrix over which the Francis iteration is to be
-		 *     performed..
+		 *     performed.
+		 *     Must be gerater than or equal to 2.
 		 */
 		static void doFrancis(Matrix< M, M >& u,
 							  Matrix< M, N >& m,
@@ -201,6 +201,7 @@ namespace singular {
 							  int n)
 		{
 			assert(M >= N);
+			assert(n >= 2);
 			// calculates the shift
 			double rho = calculateShift(m, n);
 			// applies the first right rotator
@@ -239,6 +240,8 @@ namespace singular {
 		 * `M` must be greater than or equal to `N`.
 		 * The behavior is undefined if `M < N`.
 		 *
+		 * The behavior is undefined if `n < 2`.
+		 *
 		 * @param m
 		 *     Bidiagonal matrix from which a shift is to be calculated.
 		 * @param n
@@ -248,6 +251,7 @@ namespace singular {
 		 */
 		static double calculateShift(const Matrix< M, N >& m, int n) {
 			assert(M >= N);
+			assert(n >= 2);
 			double b1 = m(n - 2, n - 2);
 			double b2 = m(n - 1, n - 1);
 			double g1 = m(n - 2, n - 1);

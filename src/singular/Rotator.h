@@ -4,6 +4,7 @@
 #include "singular/Matrix.h"
 
 #include <algorithm>
+#include <cassert>
 #include <cmath>
 #include <cstdlib>
 
@@ -62,7 +63,7 @@ namespace singular {
 		 * I2: (M-(k+2))x(M-(k+2)) identity matrix
 		 * ```
 		 *
-		 * Undefined if `M < k + 2`.
+		 * The behavior is undefined if `M < k + 2`.
 		 * 
 		 * @tparam M
 		 *     Number of the rows in the given matrix.
@@ -77,6 +78,7 @@ namespace singular {
 		 */
 		template < int M, int N >
 		Matrix< M, N > applyFromLeftTo(const Matrix< M, N >& rhs, int k) {
+			assert(M >= k + 2);
 			Matrix< M, N > m = rhs.clone();
 			for (int i = 0; i < N; ++i) {
 				double x1 = rhs(k, i);
@@ -101,7 +103,7 @@ namespace singular {
 		 * I2: (N-(k+2))x(N-(k+2)) identity matrix
 		 * ```
 		 *
-		 * Undefined if `N < k + 2`.
+		 * The behavior is undefined if `N < k + 2`.
 		 *
 		 * @tparam M
 		 *     Number of the rows in the given matrix.
@@ -116,6 +118,7 @@ namespace singular {
 		 */
 		template < int M, int N >
 		Matrix< M, N > applyFromRightTo(const Matrix< M, N >& lhs, int k) {
+			assert(N >= k + 2);
 			Matrix< M, N > m = lhs.clone();
 			for (int i = 0; i < M; ++i) {
 				double x1 = lhs(i, k);
