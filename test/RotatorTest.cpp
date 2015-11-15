@@ -2,6 +2,42 @@
 
 #include "gtest/gtest.h"
 
+TEST(RotatorTest, Rotator_should_be_a_2x2_matrix) {
+	const double ROUNDED_ERROR = 1.0e-15;
+	// rotator for [1, 1]
+	{
+		singular::Rotator r(1, 1);
+		EXPECT_NEAR(0.707106781186548, r(0, 0), ROUNDED_ERROR);
+		EXPECT_NEAR(-0.707106781186548, r(0, 1), ROUNDED_ERROR);
+		EXPECT_NEAR(0.707106781186548, r(1, 0), ROUNDED_ERROR);
+		EXPECT_NEAR(0.707106781186548, r(1, 1), ROUNDED_ERROR);
+	}
+	// rotator for [3, -2]
+	{
+		singular::Rotator r(3, -2);
+		EXPECT_NEAR(0.832050294337844, r(0, 0), ROUNDED_ERROR);
+		EXPECT_NEAR(0.554700196225229, r(0, 1), ROUNDED_ERROR);
+		EXPECT_NEAR(-0.554700196225229, r(1, 0), ROUNDED_ERROR);
+		EXPECT_NEAR(0.832050294337844, r(1, 1), ROUNDED_ERROR);
+	}
+	// rotator for [1, 0]
+	{
+		singular::Rotator r(1, 0);
+		EXPECT_NEAR(1.0, r(0, 0), ROUNDED_ERROR);
+		EXPECT_NEAR(0.0, r(0, 1), ROUNDED_ERROR);
+		EXPECT_NEAR(0.0, r(1, 0), ROUNDED_ERROR);
+		EXPECT_NEAR(1.0, r(1, 1), ROUNDED_ERROR);
+	}
+	// rotator for [0, 1]
+	{
+		singular::Rotator r(0, 1);
+		EXPECT_NEAR(0.0, r(0, 0), ROUNDED_ERROR);
+		EXPECT_NEAR(-1.0, r(0, 1), ROUNDED_ERROR);
+		EXPECT_NEAR(1.0, r(1, 0), ROUNDED_ERROR);
+		EXPECT_NEAR(0.0, r(1, 1), ROUNDED_ERROR);
+	}
+}
+
 TEST(RotatorTest, Rotator_can_transform_2x1_matrix_from_left) {
 	const double ROUNDED_ERROR = 1.0e-14;
 	const int M = 2;

@@ -24,12 +24,19 @@ namespace singular {
 		/**
 		 * Builds a rotator from a given two-element vector.
 		 *
-		 * Builds a `2x2` rotator `Q` such that,
+		 * Builds a \f$2 \times 2\f$ rotator \f$Q\f$ such that,
+		 * \f[
+		 * Q^T \begin{bmatrix} x_1 \\ x_2 \end{bmatrix}
+		 * = \begin{bmatrix} * \\ 0 \end{bmatrix}
+		 * \f]
 		 *
-		 * ```
-		 * Q^T *| x1 | = | * |
-		 *      | x2 |   | 0 |
-		 * ```
+		 * \f$Q\f$ is given by the following formula,
+		 * \f[
+		 * Q = \begin{bmatrix}
+		 *   \frac{x_1}{\sqrt{x_1^2 + x_2^2}} & -\frac{x_2}{\sqrt{x_1^2 + x_2^2}} \\
+		 *   \frac{x_2}{\sqrt{x_1^2 + x_2^2}} & \frac{x_1}{\sqrt{x_1^2 + x_2^2}}
+		 * \end{bmatrix}
+		 * \f]
 		 *
 		 * @param x1
 		 *     First element in the vector.
@@ -47,6 +54,38 @@ namespace singular {
 			double norm = sqrt(x1 * x1 + x2 * x2);
 			this->cs = x1 / norm;
 			this->sn = x2 / norm;
+		}
+
+		/**
+		 * Returns the element at given row and column.
+		 *
+		 * The behavior is undefined,
+		 *  - if `i < 0` or `i >= 2`,
+		 *  - or if `j < 0` or `j >= 2`
+		 *
+		 * @param i
+		 *     Index of the row to be obtained.
+		 * @param j
+		 *     Index of the column to be obtained.
+		 * @return
+		 *     Element at the given row and column.
+		 */
+		double operator ()(int i, int j) const {
+			assert(0 <= i && i < 2);
+			assert(0 <= j && j < 2);
+			if (i == 0) {
+				if (j == 0) {
+					return this->cs;
+				} else {
+					return -this->sn;
+				}
+			} else {
+				if (j == 0) {
+					return this->sn;
+				} else {
+					return this->cs;
+				}
+			}
 		}
 
 		/**
