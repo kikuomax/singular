@@ -15,8 +15,10 @@ namespace singular {
 	/**
 	 * Reflector.
 	 *
-	 * A reflector transforms a vector \f$(\mathbf{x} = [x_1 x_2 ... x_N])
-	 * into a vector \f$(\mathbf{y} = [-\tau 0 ... 0]).
+	 * A reflector transforms a vector (\f$\mathbf{x} =
+	 * \begin{bmatrix} x_1 & x_2 & \dots & x_N \end{bmatrix}\f$)
+	 * into a vector (\f$\mathbf{y} =
+	 * \begin{bmatrix}-\tau & 0 & \dots & 0 \end{bmatrix}\f$).
 	 *
 	 * A reflector is equivalent to the following matrix.
 	 * \f[
@@ -38,26 +40,17 @@ namespace singular {
 		/**
 		 * Constructs a reflector from a given vector.
 		 *
-		 * Forms an `L x L` matrix like the following,
-		 *
+		 * Forms an \f$L \times L\f$ matrix like the following,
 		 * \f[
-		 * \left|
-		 * \begin{array}{cc}
-		 * \mathbf{I} & \mathbf{0} \\
-		 * \mathbf{0} & \mathbf{R} \\
-		 * \end{array}
-		 * \right|
+		 * \begin{bmatrix}
+		 *   \mathbf{I} & \mathbf{0} \\
+		 *   \mathbf{0} & \mathbf{R}
+		 * \end{bmatrix}
 		 * \f]
 		 *
-		 * ```
-		 * | I | 0 |
-		 * |---+---|
-		 * | 0 | R |
-		 * ```
-		 *
-		 * \f$\mathbf{R}\f$ is an `N x N` reflector created from `v` where
-		 * `N = v.size()`.
-		 * \f$\mathbf{I}\f$ is an `(L-N)x(L-N)` identity matrix.
+		 * \f$\mathbf{R}\f$ is an \f$N \times N\f$ reflector created from
+		 * `v` where `N = v.size()`.
+		 * \f$\mathbf{I}\f$ is an \f$(L-N) \times (L-N)\f$ identity matrix.
 		 *
 		 * @param v
 		 *     Vector from which the reflector is formed.
