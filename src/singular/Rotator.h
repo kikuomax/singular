@@ -15,11 +15,12 @@ namespace singular {
 	 */
 	class Rotator {
 	private:
-		/** Cosine value of this rotator. */
-		double cs;
-
-		/** Sine value of this rotator. */
-		double sn;
+		/**
+		 * 2x2 transformation matrix.
+		 * The element at the ith row and jth column is given by
+		 * `element[i * 2 + j]`.
+		 */
+		double elements[4];
 	public:
 		/**
 		 * Builds a rotator from a given two-element vector.
@@ -52,8 +53,12 @@ namespace singular {
 			x1 /= mx;
 			x2 /= mx;
 			double norm = sqrt(x1 * x1 + x2 * x2);
-			this->cs = x1 / norm;
-			this->sn = x2 / norm;
+			double cs = x1 / norm;
+			double sn = x2 / norm;
+			this->elements[0] = cs;
+			this->elements[1] = -sn;
+			this->elements[2] = sn;
+			this->elements[3] = cs;
 		}
 
 		/**
@@ -70,37 +75,32 @@ namespace singular {
 		 * @return
 		 *     Element at the given row and column.
 		 */
-		double operator ()(int i, int j) const {
+		inline double operator ()(int i, int j) const {
 			assert(0 <= i && i < 2);
 			assert(0 <= j && j < 2);
-			if (i == 0) {
-				if (j == 0) {
-					return this->cs;
-				} else {
-					return -this->sn;
-				}
-			} else {
-				if (j == 0) {
-					return this->sn;
-				} else {
-					return this->cs;
-				}
-			}
+			return this->elements[i * 2 + j];
 		}
 
 		/**
 		 * Applies this rotator from the left hand side of a given matrix.
 		 *
-		 * This rotator can be viewed as the following MxM matrix,
-		 *
-		 * ```
-		 * | I1        |
-		 * |    Q^T    |
-		 * |        I2 |
-		 *
-		 * I1: k x k identity matrix
-		 * I2: (M-(k+2))x(M-(k+2)) identity matrix
-		 * ```
+		 * This rotator can be viewed as the following \f$M \times M\f$ matrix,
+		 * \f[
+		 * \begin{bmatrix}
+		 *   I_1 &             &            &     \\
+		 *       & \cos\theta  & \sin\theta &     \\
+		 *       & -\sin\theta & \cos\theta &     \\
+		 *       &             &            & I_2
+		 * \end{bmatrix}
+		 * \f]
+		 * where
+		 * \f[
+		 * \begin{array}{ccl}
+		 *   I_1    & : & k \times k \text{ identity matrix} \\
+		 *   I_2    & : & (M-k-2) \times (M-k-2) \text{ identity matrix} \\
+		 *   \theta & : & \text{angle of this rotator}
+		 * \end{array}
+		 * \f]
 		 *
 		 * The behavior is undefined if `M < k + 2`.
 		 * 
@@ -111,7 +111,7 @@ namespace singular {
 		 * @param rhs
 		 *     Matrix to be rotated.
 		 * @param k
-		 *     Row and column index where this rotator is applied.
+		 *     Top-left row and column index where this rotator is applied.
 		 * @return
 		 *     Result of this rotation.
 		 */
@@ -122,8 +122,8 @@ namespace singular {
 			for (int i = 0; i < N; ++i) {
 				double x1 = rhs(k, i);
 				double x2 = rhs(k + 1, i);
-				m(k, i) = this->cs * x1 + this->sn * x2;
-				m(k + 1, i) = -this->sn * x1 + this->cs * x2;
+				m(k, i) = this->elements[0] * x1 + this->elements[2] * x2;
+				m(k + 1, i) = this->elements[1] * x1 + this->elements[3] * x2;
 			}
 			return m;
 		}
@@ -131,16 +131,23 @@ namespace singular {
 		/**
 		 * Applies this rotator from the right hand side of a given matrix.
 		 *
-		 * This rotator can be viewed as the following NxN matrix,
-		 *
-		 * ```
-		 * | I1      |
-		 * |    Q    |
-		 * |      I2 |
-		 *
-		 * I1: k x k identity matrix
-		 * I2: (N-(k+2))x(N-(k+2)) identity matrix
-		 * ```
+		 * This rotator can be viewed as the following \f$N \times N\f$ matrix,
+		 * \f[
+		 * \begin{bmatrix}
+		 *   I_1 &            &             &     \\
+		 *       & \cos\theta & -\sin\theta &     \\
+		 *       & \sin\theta & \cos\theta  &     \\
+		 *       &            &             & I_2
+		 * \end{bmatrix}
+		 * \f]
+		 * where
+		 * \f[
+		 * \begin{array}{ccl}
+		 *   I_1    & : & k \times k \text{ identity matrix} \\
+		 *   I_2    & : & (N-k-2) \times (N-k-2) \text{ identity matrix} \\
+		 *   \theta & : & \text{angle of this rotator}
+		 * \end{array}
+		 * \f]
 		 *
 		 * The behavior is undefined if `N < k + 2`.
 		 *
@@ -151,7 +158,7 @@ namespace singular {
 		 * @param lhs
 		 *     Matrix to be rotated.
 		 * @param k
-		 *     Row and column index where this rotator is applied.
+		 *     Top-left row and column index where this rotator is applied.
 		 * @return
 		 *     Result of this rotation.
 		 */
@@ -162,12 +169,11 @@ namespace singular {
 			for (int i = 0; i < M; ++i) {
 				double x1 = lhs(i, k);
 				double x2 = lhs(i, k + 1);
-				m(i, k) = x1 * this->cs + x2 * this->sn;
-				m(i, k + 1) = x1 * (-this->sn) + x2 * this->cs;
+				m(i, k) = x1 * this->elements[0] + x2 * this->elements[2];
+				m(i, k + 1) = x1 * this->elements[1] + x2 * this->elements[3];
 			}
 			return m;
 		}
-	private:
 	};
 
 }
