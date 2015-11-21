@@ -114,7 +114,7 @@ namespace singular {
 					s(i, i) = m2(i, i);
 				}
 			}
-			// sorts singular values in descending order
+			// sorts singular values in descending order if necessary
 			int shuffle[M];  // M >= N
 			bool sortNeeded = false;
 			for (int i = 0; i < M; ++i) {
@@ -123,22 +123,10 @@ namespace singular {
 					sortNeeded || (i < N - 1 && s(i, i) < s(i + 1, i + 1));
 			}
 			if (sortNeeded) {
-				for (int i = 0; i < N - 1; ++i) {
-					// locates the ith largest singular value
-					double mx = s(shuffle[i], shuffle[i]);
-					int mxJ = i;
-					for (int j = i + 1; j < N; ++j) {
-						double sv = s(shuffle[j], shuffle[j]);
-						if (sv > mx) {
-							mx = sv;
-							mxJ = j;
-						}
-					}
-					// brings the ith largest singular value at (i, i)
-					int tmp = shuffle[i];
-					shuffle[i] = shuffle[mxJ];
-					shuffle[mxJ] = tmp;
-				}
+				// shuffles the N (<= M) singular values
+				std::sort(shuffle, shuffle + N, [&s](int i, int j) {
+					return s(i, i) > s(j, j);  // descending order
+				});
 				return std::make_tuple(u.shuffleColumns(shuffle),
 									   s.shuffleColumns(shuffle).shuffleRows(shuffle),
 									   v.shuffleColumns(shuffle));
@@ -149,8 +137,6 @@ namespace singular {
 			}
 		}
 	private:
-		class BulgeChaser;
-
 		/**
 		 * M x N bidiagonal matrix.
 		 *
@@ -177,8 +163,6 @@ namespace singular {
 			 * The ith upper-diagonal element is given by `pBlock[i * 2 + 1]`.
 			 */
 			double* pBlock;
-
-			friend class BulgeChaser;
 		public:
 			/**
 			 * Initializes from bidiagonal elements of a given matrix.
