@@ -42,9 +42,8 @@ TEST(RotatorTest, Rotator_can_transform_2x1_matrix_from_left) {
 	const double ROUNDED_ERROR = 1.0e-14;
 	const int M = 2;
 	const int N = 1;
-	double data[] = { 1, 2 };
-	singular::Matrix< M, N > m;
-	m.fill(data);
+	const double DATA[] = { 1, 2 };
+	singular::Matrix< M, N > m = singular::Matrix< M, N >::filledWith(DATA);
 	singular::Rotator r(1, 2);
 	singular::Matrix< M, N > m2 = r.applyFromLeftTo(m, 0);
 	EXPECT_NEAR(2.236067977499790, m2(0, 0), ROUNDED_ERROR);
@@ -55,9 +54,8 @@ TEST(RotatorTest, Rotator_can_transform_1x2_matrix_from_right) {
 	const double ROUNDED_ERROR = 1.0e-14;
 	const int M = 1;
 	const int N = 2;
-	double data[] = { 1, 2 };
-	singular::Matrix< M, N > m;
-	m.fill(data);
+	const double DATA[] = { 1, 2 };
+	singular::Matrix< M, N > m = singular::Matrix< M, N >::filledWith(DATA);
 	singular::Rotator r(1, 2);
 	singular::Matrix< M, N > m2 = r.applyFromRightTo(m, 0);
 	EXPECT_NEAR(2.236067977499790, m2(0, 0), ROUNDED_ERROR);
@@ -68,14 +66,13 @@ TEST(RotatorTest, Rotator_can_transform_4x3_matrix_from_left) {
 	const double ROUNDED_ERROR = 1.0e-14;
 	const int M = 4;
 	const int N = 3;
-	double data[] = {
+	const double DATA[] = {
 		1, 3, 8,
 		2, 6, 5,
 		4, 2, 7,
 		8, 9, 1
 	};
-	singular::Matrix< M, N > m;
-	m.fill(data);
+	singular::Matrix< M, N > m = singular::Matrix< M, N >::filledWith(DATA);
 	singular::Rotator r(6, 2);
 	singular::Matrix< M, N > m2 = r.applyFromLeftTo(m, 1);
 	EXPECT_NEAR(1, m2(0, 0), ROUNDED_ERROR);
@@ -96,14 +93,13 @@ TEST(RotatorTest, Rotator_can_transform_4x3_matrix_from_right) {
 	const double ROUNDED_ERROR = 1.0e-14;
 	const int M = 4;
 	const int N = 3;
-	double data[] = {
+	const double DATA[] = {
 		1, 3, 8,
 		2, 6, 5,
 		4, 2, 7,
 		8, 9, 1
 	};
-	singular::Matrix< M, N > m;
-	m.fill(data);
+	singular::Matrix< M, N > m = singular::Matrix< M, N >::filledWith(DATA);
 	singular::Rotator r(6, 5);
 	singular::Matrix< M, N > m2 = r.applyFromRightTo(m, 1);
 	EXPECT_NEAR(1, m2(0, 0), ROUNDED_ERROR);

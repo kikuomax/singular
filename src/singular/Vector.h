@@ -22,15 +22,16 @@ namespace singular {
 		/** Distance to jump from one element to the next element. */
 		ptrdiff_t delta;
 	public:
-		/** Const iterator. */
-		class const_iterator
-			: public std::iterator< std::bidirectional_iterator_tag, const T >
+		/** General iterator. */
+		template < typename U >
+		class general_iterator
+			: public std::iterator< std::bidirectional_iterator_tag, U >
 		{
 		private:
 			friend class Vector;
 
 			/** Pointer to an element. */
-			const T* ptr;
+			U* ptr;
 
 			/** Distance to jump to the next element. */
 			ptrdiff_t delta;
@@ -43,7 +44,7 @@ namespace singular {
 			 * @param delta
 			 *     Distance to jump to the next element.
 			 */
-			inline const_iterator(const T* ptr, ptrdiff_t delta)
+			inline general_iterator(U* ptr, ptrdiff_t delta)
 				: ptr(ptr), delta(delta) {}
 
 			/**
@@ -55,8 +56,8 @@ namespace singular {
 			 * @return
 			 *     Iterator that points to the first element in `v`.
 			 */
-			static inline const_iterator begin(const Vector< T >& v) {
-				return const_iterator(v.pBlock, v.delta);
+			static inline general_iterator begin(const Vector< T >& v) {
+				return general_iterator(v.pBlock, v.delta);
 			}
 
 			/**
@@ -68,9 +69,9 @@ namespace singular {
 			 * @return
 			 *     Stop iterator of `pVector`.
 			 */
-			static inline const_iterator end(const Vector< T >& v) {
-				const T* ptr = v.pBlock + v.size() * v.delta;
-				return const_iterator(ptr, v.delta);
+			static inline general_iterator end(const Vector< T >& v) {
+				U* ptr = v.pBlock + v.size() * v.delta;
+				return general_iterator(ptr, v.delta);
 			}
 
 			/**
@@ -89,7 +90,7 @@ namespace singular {
 			 * @return
 			 *     Element that this iterator points to.
 			 */
-			inline const T& operator *() const {
+			inline U& operator *() const {
 				return *this->ptr;
 			}
 
@@ -99,7 +100,7 @@ namespace singular {
 			 * @return
 			 *     Pointer of this iterator.
 			 */
-			inline const T* operator ->() const {
+			inline U* operator ->() const {
 				return this->ptr;
 			}
 
@@ -109,7 +110,7 @@ namespace singular {
 			 * @return
 			 *     This iterator that points to the next element.
 			 */
-			inline const_iterator& operator ++() {
+			inline general_iterator& operator ++() {
 				this->move(this->delta);
 				return *this;
 			}
@@ -120,8 +121,8 @@ namespace singular {
 			 * @return
 			 *     Iterator that points to the element before the move.
 			 */
-			const_iterator operator ++(int) {
-				const_iterator prev = *this;
+			general_iterator operator ++(int) {
+				general_iterator prev = *this;
 				this->move(this->delta);
 				return prev;
 			}
@@ -132,7 +133,7 @@ namespace singular {
 			 * @return
 			 *     This iterator that points to the previous element.
 			 */
-			inline const_iterator& operator --() {
+			inline general_iterator& operator --() {
 				this->move(-this->delta);
 				return *this;
 			}
@@ -143,8 +144,8 @@ namespace singular {
 			 * @return
 			 *     Iterator that points to the element before the move.
 			 */
-			const_iterator operator --(int) {
-				const_iterator next = *this;
+			general_iterator operator --(int) {
+				general_iterator next = *this;
 				this->move(-this->delta);
 				return next;
 			}
@@ -158,7 +159,7 @@ namespace singular {
 			 * @return
 			 *     Whether this iterator and `rhs` point the same element.
 			 */
-			inline bool operator ==(const const_iterator& rhs) const {
+			inline bool operator ==(const general_iterator& rhs) const {
 				return this->ptr == rhs.ptr;
 			}
 
@@ -171,10 +172,16 @@ namespace singular {
 			 * @return
 			 *     Whether this iterator and `rhs` point different elements.
 			 */
-			inline bool operator !=(const const_iterator& rhs) const {
+			inline bool operator !=(const general_iterator& rhs) const {
 				return this->ptr != rhs.ptr;
 			}
 		};
+
+		/** Iterator. */
+		typedef general_iterator< T > iterator;
+
+		/** Const iterator. */
+		typedef general_iterator< const T > const_iterator;
 	public:
 		/**
 		 * Constructs an instance that wraps a given memory block.
@@ -231,13 +238,33 @@ namespace singular {
 		}
 
 		/**
-		 * Starts iterating on elements in this vector.
+		 * Starts iteration over elements in this vector.
+		 *
+		 * @return
+		 *    Iterator that iterates elements in this vector.
+		 */
+		iterator begin() {
+			return iterator::begin(*this);
+		}
+
+		/**
+		 * Starts iteration over elements in this vector.
 		 *
 		 * @return
 		 *     Iterator that iterates elements in this vector.
 		 */
 		const_iterator begin() const {
 			return const_iterator::begin(*this);
+		}
+
+		/**
+		 * Returns the stop iterator of this vector.
+		 *
+		 * @return
+		 *     Stop iterator of this vector.
+		 */
+		iterator end() {
+			return iterator::end(*this);
 		}
 
 		/**
@@ -278,7 +305,7 @@ namespace singular {
 		 * @return
 		 *     Const variant of this vector.
 		 */
-		operator Vector< const T >() const {
+		inline operator Vector< const T >() const {
 			return Vector< const T >(this->pBlock, this->size(), this->delta);
 		}
 	};

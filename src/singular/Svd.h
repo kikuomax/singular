@@ -5,8 +5,8 @@
 #include "singular/Reflector.h"
 #include "singular/Rotator.h"
 
+#include <algorithm>
 #include <cassert>
-#include <iostream>
 #include <tuple>
 
 namespace singular {
@@ -98,18 +98,16 @@ namespace singular {
 			// copies the diagonal elements
 			// and makes all singular values positive
 			Matrix< M, N > s;
-			for (int i = 0; i < M; ++i) {
-				for (int j = 0; j < N; ++j) {
-					s(i, j) = m2(i, j);
-				}
-			}
 			for (int i = 0; i < N; ++i) {
 				if (m2(i, i) < 0) {
 					s(i, i) = -m2(i, i);
 					// inverts the sign of the right singular vector
-					for (int j = 0; j < N; ++j) {
-						v(j, i) = -v(j, i);
-					}
+					Vector< double > vi = v.column(i);
+					std::transform(
+						vi.begin(), vi.end(), vi.begin(),
+						[](double x) {
+							return -x;
+						});
 				} else {
 					s(i, i) = m2(i, i);
 				}

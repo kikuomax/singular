@@ -4,6 +4,7 @@
 #include "singular/Vector.h"
 
 #include <algorithm>
+#include <cstring>
 #include <iostream>
 
 namespace singular {
@@ -105,6 +106,25 @@ namespace singular {
 			return eye;  // compile error if M != N*/
 		}
 
+		/**
+		 * Creates a matrix filled with given values.
+		 *
+		 * The value at the ith row and jth column is taken from
+		 * `values[M * i + j]`.
+		 *
+		 * The behavior is undefined if `values` has less than `M * N` elements.
+		 *
+		 * @param values
+		 *     Values to fill the matrix.
+		 * @return
+		 *     Matrix filled with `values`.
+		 */
+		static Matrix< M, N > filledWith(const double values[]) {
+			double* pBlock = new double[M * N];
+			memcpy(pBlock, values, sizeof(double) * M * N);
+			return Matrix< M, N >(pBlock);
+		}
+
 		/** Returns the value at a given row and column. */
 		inline double operator ()(int i, int j) const {
 			return this->pBlock[i * N + j];
@@ -116,38 +136,65 @@ namespace singular {
 		}
 
 		/**
-		 * Returns a given row in this matrix as a vector.
+		 * Returns a given row in this matrix as a modifiable vector.
 		 *
 		 * @param i
 		 *     Index of the row to be obtained.
 		 * @return
-		 *     i-th row as a vector.
+		 *     ith row as a vector.
+		 *     Changes on this vector are reflected to this matrix.
+		 */
+		Vector< double > row(int i) {
+			return Vector< double >(this->pBlock + i * N, N, 1);
+		}
+
+		/**
+		 * Returns a given row in this matrix as an unmodifiable vector.
+		 *
+		 * @param i
+		 *     Index of the row to be obtained.
+		 * @return
+		 *     ith row as a vector.
 		 */
 		Vector< const double > row(int i) const {
 			return Vector< const double >(this->pBlock + i * N, N, 1);
 		}
 
 		/**
-		 * Returns a given column in this matrix as a vector.
+		 * Returns a given column in this matrix as a modifiable vector.
 		 *
-		 * @param i
+		 * @param j
 		 *     Index of the column to be obtained.
 		 * @return
-		 *     i-th column as a vector.
+		 *     jth column as a vector.
+		 *     Changes on this vector are reflected to this matrix.
 		 */
-		Vector< const double > column(int i) const {
-			return Vector< const double >(this->pBlock + i, M, N);
+		Vector< double > column(int j) {
+			return Vector< double >(this->pBlock + j, M, N);
+		}
+
+		/**
+		 * Returns a given column in this matrix as an modifiable vector.
+		 *
+		 * @param j
+		 *     Index of the column to be obtained.
+		 * @return
+		 *     jth column as a vector.
+		 */
+		Vector< const double > column(int j) const {
+			return Vector< const double >(this->pBlock + j, M, N);
 		}
 
 		/**
 		 * Fills this matrix with given values.
 		 *
-		 * The value at row `i` and column `j` will be taken from
+		 * The value at the ith row and jth column is taken from
 		 * `values[i * N + j]`.
 		 *
+		 * The behavior is undefined if `values` has less than `M * N` elements.
+		 *
 		 * @param values
-		 *     Array of values to fill this matrix.
-		 *     Must have at least `M * N` valid elements.
+		 *     Values to fill this matrix.
 		 */
 		Matrix< M, N >& fill(const double values[]) {
 			std::copy(values, values + M * N, this->pBlock);
