@@ -4,7 +4,7 @@ project (singular)
 
 set (PROJECT_MAJOR 0)
 set (PROJECT_MINOR 1)
-set (PROJECT_PATCH 0-SNAPSHOT)
+set (PROJECT_PATCH 0)
 set (PROJECT_VERSION "${PROJECT_MAJOR}.${PROJECT_MINOR}.${PROJECT_PATCH}")
 
 # turn off if you want to dynamically link the MSVC runtime
