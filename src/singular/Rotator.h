@@ -43,8 +43,6 @@ namespace singular {
 		 *     First element in the vector.
 		 * @param x2
 		 *     Second element in the vector.
-		 * @param offset
-		 *     Row index of `x1`.
 		 */
 		Rotator(double x1, double x2) {
 			// normalizes by the maximum magnitude

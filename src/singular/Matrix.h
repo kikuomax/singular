@@ -10,7 +10,7 @@
 namespace singular {
 
 	/**
-	 * Fixed sized matrix.
+	 * `M x N` matrix.
 	 *
 	 * @tparam M
 	 *     Number of rows.
@@ -31,22 +31,23 @@ namespace singular {
 		// transposed matrix is a friend
 		friend class Matrix< N, M >;
 	public:
-		/** Initializes a zero matrix. */
+		/** Initializes a matrix filled with zeros. */
 		Matrix() {
 			this->pBlock = new double[M * N];
 			std::fill(this->pBlock, this->pBlock + (M * N), 0.0);
 		}
 
 		/** Simple copy is not allowed. */
-		Matrix(const Matrix< M, N >& copyee) = delete;
+		Matrix(const Matrix& copyee) = delete;
 
 		/**
-		 * Steals the memory block of a given matrix.
+		 * Steals the memory block from a given matrix.
 		 *
 		 * @param[in,out] copyee
-		 *     Matrix to be copied. No longer valid after this call.
+		 *     Matrix from which the memory block is to be stolen.
+		 *     No longer valid after this call.
 		 */
-		Matrix(Matrix< M, N >&& copyee) : pBlock(copyee.pBlock) {
+		Matrix(Matrix&& copyee) : pBlock(copyee.pBlock) {
 			copyee.pBlock = 0;
 		}
 
@@ -56,14 +57,15 @@ namespace singular {
 		}
 
 		/**
-		 * Steals the memory block of a given matrix.
+		 * Steals the memory block from a given matrix.
 		 *
 		 * @param[in,out] copyee
-		 *     Matrix to be copied. No longer valid after this call.
+		 *     Matrix from which the memory block is to be stolen.
+		 *     No longer valid after this call.
 		 * @return
 		 *     Reference to this matrix.
 		 */
-		Matrix< M, N >& operator =(Matrix< M, N >&& copyee) {
+		Matrix& operator =(Matrix&& copyee) {
 			this->release();
 			this->pBlock = copyee.pBlock;
 			copyee.pBlock = 0;
@@ -71,7 +73,7 @@ namespace singular {
 		}
 
 		/** Simple copy is not allowed. */
-		Matrix< M, N >& operator =(const Matrix< M, N >& copyee) = delete;
+		Matrix& operator =(const Matrix& copyee) = delete;
 
 		/**
 		 * Creates a clone of this matrix.
@@ -82,28 +84,27 @@ namespace singular {
 		 * @return
 		 *     Clone of this matrix.
 		 */
-		Matrix< M, N > clone() const {
+		Matrix clone() const {
 			double* pBlock = new double[M * N];
 			std::copy(this->pBlock, this->pBlock + M * N, pBlock);
-			return Matrix< M, N >(pBlock);
+			return Matrix(pBlock);
 		}
 
 		/**
 		 * Creates an identity matrix.
 		 *
-		 * This function cannot be compiled if `M != N`.
-		 *
 		 * @return
 		 *     Identity matrix.
 		 */
-		static Matrix< M, N > identity() {
-			Matrix< M, M > eye;
+		static Matrix identity() {
+			const int L = M < N ? M : N;
+			Matrix eye;
 			double* pDst = eye.pBlock;
-			for (int i = 0; i < M; ++i) {
+			for (int i = 0; i < L; ++i) {
 				*pDst = 1;
 				pDst += N + 1;
 			}
-			return eye;  // compile error if M != N*/
+			return eye;
 		}
 
 		/**
@@ -119,19 +120,50 @@ namespace singular {
 		 * @return
 		 *     Matrix filled with `values`.
 		 */
-		static Matrix< M, N > filledWith(const double values[]) {
+		static Matrix filledWith(const double values[]) {
 			double* pBlock = new double[M * N];
 			memcpy(pBlock, values, sizeof(double) * M * N);
-			return Matrix< M, N >(pBlock);
+			return Matrix(pBlock);
 		}
 
-		/** Returns the value at a given row and column. */
-		inline double operator ()(int i, int j) const {
+		/**
+		 * Returns the value at a given row and column.
+		 *
+		 * The behavior is undefined,
+		 *  - if `i < 0` or `i >= M`,
+		 *  - or if `j < 0` or `j >= N`
+		 *
+		 * @param i
+		 *     Index of the row to be obtained.
+		 * @param j
+		 *     Index of the column to be obtained.
+		 * @return
+		 *     Element at the ith row and jth column.
+		 *     Changes on a returned element is reflected to this matrix.
+		 */
+		inline double& operator ()(int i, int j) {
+			assert(i >= 0 && i < M);
+			assert(j >= 0 && j < N);
 			return this->pBlock[i * N + j];
 		}
 
-		/** Returns the value at a given row and column. */
-		inline double& operator ()(int i, int j) {
+		/**
+		 * Returns the value at a given row and column.
+		 *
+		 * The behavior is undefined,
+		 *  - if `i < 0` or `i >= M`,
+		 *  - or if `j < 0` or `j >= N`
+		 *
+		 * @param i
+		 *     Index of the row to be obtained.
+		 * @param j
+		 *     Index of the column to be obtained.
+		 * @return
+		 *     Element at the ith row and jth column.
+		 */
+		inline double operator ()(int i, int j) const {
+			assert(i >= 0 && i < M);
+			assert(j >= 0 && j < N);
 			return this->pBlock[i * N + j];
 		}
 
@@ -174,7 +206,7 @@ namespace singular {
 		}
 
 		/**
-		 * Returns a given column in this matrix as an modifiable vector.
+		 * Returns a given column in this matrix as an unmodifiable vector.
 		 *
 		 * @param j
 		 *     Index of the column to be obtained.
@@ -196,7 +228,7 @@ namespace singular {
 		 * @param values
 		 *     Values to fill this matrix.
 		 */
-		Matrix< M, N >& fill(const double values[]) {
+		Matrix& fill(const double values[]) {
 			std::copy(values, values + M * N, this->pBlock);
 			return *this;
 		}
@@ -249,15 +281,15 @@ namespace singular {
 		/**
 		 * Shuffles rows in this matrix.
 		 *
-		 * Equivalent to multiplying the following permutation matrix \f$P\f$
-		 * from the left of this matrix.
+		 * Equivalent to multiplying the following permutation matrix
+		 * \f$\mathbf{P}\f$ from the left of this matrix.
 		 *
 		 * \f[
-		 * P_{ij} =
-		 *   \left{
+		 * \mathbf{P}_{ij} =
+		 *   \left\{
 		 *     \begin{array}{ll}
-		 *       1 & (order[i] = j) \\
-		 *       0 & (order[i] \neq j)
+		 *       1 & (\text{order}[i] = j) \\
+		 *       0 & (\text{order}[i] \neq j)
 		 *     \end{array}
 		 *   \right.
 		 * \f]
@@ -268,7 +300,7 @@ namespace singular {
 		 * @return
 		 *     Matrix shuffled in the given order.
 		 */
-		Matrix< M, N > shuffleRows(const int order[]) const {
+		Matrix shuffleRows(const int order[]) const {
 			double* pBlock = new double[M * N];
 			double* pDst = pBlock;
 			for (int i = 0; i < M; ++i) {
@@ -276,21 +308,21 @@ namespace singular {
 				std::copy(pSrc, pSrc + N, pDst);
 				pDst += N;
 			}
-			return Matrix< M, N >(pBlock);
+			return Matrix(pBlock);
 		}
 
 		/**
 		 * Shuffles columns in this matrix.
 		 *
-		 * Equivalent to multiplying the following permutation matrix \f$P\f$
-		 * from the right of this matrix.
+		 * Equivalent to multiplying the following permutation matrix
+		 * \f$\mathbf{P}\f$ from the right of this matrix.
 		 *
 		 * \f[
-		 * P_{ij} =
-		 *   \left{
+		 * \mathbf{P}_{ij} =
+		 *   \left\{
 		 *     \begin{array}{ll}
-		 *       1 & (i = order[j]) \\
-		 *       0 & (i \neq order[j])
+		 *       1 & (i = \text{order}[j]) \\
+		 *       0 & (i \neq \text{order}[j])
 		 *     \end{array}
 		 *   \right.
 		 * \f]
@@ -301,7 +333,7 @@ namespace singular {
 		 * @return
 		 *     Matrix shuffled in the given order.
 		 */
-		Matrix< M, N > shuffleColumns(const int order[]) const {
+		Matrix shuffleColumns(const int order[]) const {
 			double* pBlock = new double[M * N];
 			for (int j = 0; j < N; ++j) {
 				double* pDst = pBlock + j;
@@ -312,7 +344,7 @@ namespace singular {
 					pDst += N;
 				}
 			}
-			return Matrix< M, N >(pBlock);
+			return Matrix(pBlock);
 		}
 	private:
 		/**

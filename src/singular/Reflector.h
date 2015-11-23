@@ -8,6 +8,7 @@
 #include <iostream>
 #include <iterator>
 #include <limits>
+#include <numeric>
 #include <vector>
 
 namespace singular {
@@ -52,12 +53,15 @@ namespace singular {
 		 * `v` where `N = v.size()`.
 		 * \f$\mathbf{I}\f$ is an \f$(L-N) \times (L-N)\f$ identity matrix.
 		 *
+		 * The behavior is undefined if `v.size() == 0` or `v.size() > L`.
+		 *
 		 * @param v
 		 *     Vector from which the reflector is formed.
 		 * @throws Exception
 		 *     If `v.size() == 0`, or if `v.size() > L`.
 		 */
 		Reflector(const Vector< const double >& v) {
+			assert(v.size() > 0 && v.size() <= L);
 			const size_t N = v.size();
 			// copies the vector
 			this->u.reserve(N);
@@ -110,15 +114,18 @@ namespace singular {
 			int offset = L - u.size();
 			for (int i = 0; i < N; ++i) {
 				// caches gamma * u^T * m
-				double gUM = 0.0;
-				for (int j = 0; j < u.size(); ++j) {
-					gUM += this->u[j] * m(j + offset, i);
-				}
+				Vector< const double > srcColumn = m.column(i).slice(offset);
+				double gUM = std::inner_product(
+					this->u.begin(), this->u.end(), srcColumn.begin(), 0.0);
 				gUM *= this->gamma;
 				// H * m = m - u * gUM
-				for (int j = 0; j < u.size(); ++j) {
-					m2(j + offset, i) = m(j + offset, i) - (this->u[j] * gUM);
-				}
+				Vector< double > dstColumn = m2.column(i).slice(offset);
+				std::transform(
+					this->u.begin(), this->u.end(), srcColumn.begin(),
+					dstColumn.begin(),
+					[gUM](double a, double b) {
+						return b - a * gUM;
+					});
 			}
 			return m2;
 		}
@@ -140,42 +147,20 @@ namespace singular {
 			int offset = L - u.size();
 			for (int i = 0; i < M; ++i) {
 				// caches gamma * m * u
-				double gMU = 0.0;
-				for (int j = 0; j < u.size(); ++j) {
-					gMU += m(i, j + offset) * this->u[j];
-				}
+				Vector< const double > srcRow = m.row(i).slice(offset);
+				double gMU = std::inner_product(
+					this->u.begin(), this->u.end(), srcRow.begin(), 0.0);
 				gMU *= this->gamma;
 				// m * H = m - gMU * u^T
-				for (int j = 0; j < u.size(); ++j) {
-					m2(i, j + offset) = m(i, j + offset) - (gMU * this->u[j]);
-				}
+				Vector< double > dstRow = m2.row(i).slice(offset);
+				std::transform(
+					this->u.begin(), this->u.end(), srcRow.begin(),
+					dstRow.begin(),
+					[gMU](double a, double b) {
+						return b - gMU * a;
+					});
 			}
 			return m2;
-		}
-	private:
-		/**
-		 * Prints a given reflector to a given output stream.
-		 *
-		 * @param out
-		 *     Output stream to which `reflector` is to be printed.
-		 * @param reflector
-		 *     Reflector to be printed.
-		 * @return
-		 *     `out`.
-		 */
-		friend std::ostream& operator <<(std::ostream& out,
-										 const Reflector< L >& reflector)
-		{
-			out << "gamma: " << reflector.gamma;
-			out << ", u: [";
-			for (size_t i = 0; i < reflector.u.size(); ++i) {
-				out << reflector.u[i];
-				if (i + 1 < reflector.u.size()) {
-					out << " ";
-				}
-			}
-			out << "]";
-			return out;
 		}
 	};
 

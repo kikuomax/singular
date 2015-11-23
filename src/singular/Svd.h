@@ -26,13 +26,13 @@ namespace singular {
 		 * Tuple of left singular vectors, singular values and right singular
 		 * vectors.
 		 *
-		 * Use `getU`, `getS` and `getV` instead of `std::get`.
+		 * Use `getU`, `getS` and `getV` instead of `std::get` to access items.
 		 */
 		typedef std::tuple< Matrix< M, M >,
 							DiagonalMatrix< M, N >,
 							Matrix< N, N > > USV;
 
-		/** Returns the left singular vectors from a given `USV` tuple. */
+		/** Returns the left-singular-vectors from a given `USV` tuple. */
 		static inline const Matrix< M, M >& getU(const USV& usv) {
 			return std::get< 0 >(usv);
 		}
@@ -42,7 +42,7 @@ namespace singular {
 			return std::get< 1 >(usv);
 		}
 
-		/** Returns the right singular vectors from a given `USV` tuple. */
+		/** Returns the right-singular-vectors from a given `USV` tuple. */
 		static inline const Matrix< N, N >& getV(const USV& usv) {
 			return std::get< 2 >(usv);
 		}
@@ -50,6 +50,18 @@ namespace singular {
 		/**
 		 * Decomposes a given matrix into left singular vectors,
 		 * singular values and right singular vectors.
+		 *
+		 * \f[
+		 * \mathbf{A} = \mathbf{U} \mathbf{\Sigma} \mathbf{V}^T
+		 * \f]
+		 * \f[
+		 * \begin{array}{ccl}
+		 *   \mathbf{A} & : & \text{matrix to be decomposed; i.e., m} \\
+		 *   \mathbf{U} & : & \text{left-singular-vectors given as an orthonormal matrix} \\
+		 *   \mathbf{S} & : & \text{singular values given as a diagonal matrix} \\
+		 *   \mathbf{V} & : & \text{right-singular-vectors as an orthonormal matrix}
+		 * \end{array}
+		 * \f]
 		 *
 		 * @param m
 		 *     `M` x `N` matrix to be decomposed.
@@ -129,20 +141,10 @@ namespace singular {
 				std::transform(shuffle, shuffle + N, ss2, [ss](int i) {
 					return ss[i];
 				});
-				/*
-				Matrix< M, N > s;
-				for (int i = 0; i < N; ++i) {
-					s(i, i) = ss[shuffle[i]];
-				}*/
 				return std::make_tuple(u.shuffleColumns(shuffle),
 									   DiagonalMatrix< M, N >(ss2),
 									   v.shuffleColumns(shuffle));
 			} else {
-				/*
-				Matrix< M, N > s;
-				for (int i = 0; i < N; ++i) {
-					s(i, i) = ss[i];
-				}*/
 				return std::make_tuple(std::move(u),
 									   DiagonalMatrix< M, N >(ss),
 									   std::move(v));
@@ -154,7 +156,7 @@ namespace singular {
 		 *
 		 * If `M >= N`, a bidiagonal matrix looks like,
 		 * \f[
-		 * A = \begin{bmatrix}
+		 * \mathbf{A} = \begin{bmatrix}
 		 *   \beta_1 & \gamma_1 &          &             &              \\
 		 *           & \beta_2  & \gamma_2 &             &              \\
 		 *           &          & \ddots   & \ddots      &              \\
@@ -163,7 +165,7 @@ namespace singular {
 		 * \end{bmatrix}
 		 * \f]
 		 *
-		 * Behavior is undefined if `M < N`.
+		 * The behavior is undefined if `M < N`.
 		 */
 		class BidiagonalMatrix {
 		private:
@@ -182,7 +184,7 @@ namespace singular {
 			 * **Only bidiagonal elements are taken from `m` whether it is
 			 * bidiagonal or not.**
 			 *
-			 * Behavior is undefined if `M < N`.
+			 * The behavior is undefined if `M < N`.
 			 *
 			 * @param m
 			 *     Matrix from which bidiagonal elements are to be taken.
@@ -199,7 +201,7 @@ namespace singular {
 			}
 
 			/**
-			 * Steals the memory block of a given bidiagonal matrix.
+			 * Steals the memory block from a given bidiagonal matrix.
 			 *
 			 * @param[in,out] copyee
 			 *     Bidiagonal matrix from which the memory block is to be
@@ -226,20 +228,22 @@ namespace singular {
 			/**
 			 * Returns the element at given row and column.
 			 *
-			 * Element is 0 unless `i == j` or `i == j + 1`.
+			 * Values are 0 unless `i == j` or `i == j + 1`.
 			 *
-			 * Behavior is undefined,
-			 *  - if `i >= M`,
-			 *  - or if `j >= N`
+			 * The behavior is undefined,
+			 *  - if `i < 0` or `i >= M`,
+			 *  - or if `j < 0` or `j >= N`
 			 *
-			 * @param m
+			 * @param i
 			 *     Index of the row to be obtained.
-			 * @param n
+			 * @param j
 			 *     Index of the column to be obtained.
 			 * @return
 			 *     Element at the given row and column.
 			 */
 			double operator ()(int i, int j) const {
+				assert(i >= 0 && i < M);
+				assert(j >= 0 && j < N);
 				if (i == j) {
 					return this->pBlock[2 * i];
 				} else if (i + 1 == j) {
@@ -263,8 +267,8 @@ namespace singular {
 			 *     &   &   &   & \ddots
 			 * \end{bmatrix}
 			 * \begin{bmatrix}
-			 *   Q &   \\
-			 *     & I
+			 *   \mathbf{Q} &            \\
+			 *              & \mathbf{I}
 			 * \end{bmatrix}
 			 * \to
 			 * \begin{bmatrix}
@@ -278,9 +282,9 @@ namespace singular {
 			 * where
 			 * \f[
 			 * \begin{array}{ccl}
-			 * Q & : & 2 \times 2 \text{ rotator} \\
-			 * I & : & (N-2) \times (N-2) \text{ identity matrix} \\
-			 * + & : & \text{bulge}
+			 * \mathbf{Q} & : & 2 \times 2 \text{ rotator} \\
+			 * \mathbf{I} & : & (N-2) \times (N-2) \text{ identity matrix} \\
+			 * +          & : & \text{bulge}
 			 * \end{array}
 			 * \f]
 			 *
@@ -321,9 +325,9 @@ namespace singular {
 			 *          &        &   &   &   & \ddots
 			 * \end{bmatrix}
 			 * \begin{bmatrix}
-			 *   I_1 &   &     \\
-			 *       & Q &     \\
-			 *       &   & I_2
+			 *   \mathbf{I}_1 &            &              \\
+			 *                & \mathbf{Q} &              \\
+			 *                &            & \mathbf{I}_2
 			 * \end{bmatrix}
 			 * \to
 			 * \begin{bmatrix}
@@ -338,10 +342,10 @@ namespace singular {
 			 * where
 			 * \f[
 			 * \begin{array}{ccl}
-			 *   Q   & : & 2 \times 2 \text{ rotator} \\
-			 *   I_1 & : & n \times n \text{ identity matrix} \\
-			 *   I_2 & : & (N-n-2) \times (N-n-2) \text{ identity matrix} \\
-			 *   +   & : & \text{bulge}
+			 *   \mathbf{Q}   & : & 2 \times 2 \text{ rotator} \\
+			 *   \mathbf{I}_1 & : & n \times n \text{ identity matrix} \\
+			 *   \mathbf{I}_2 & : & (N-n-2) \times (N-n-2) \text{ identity matrix} \\
+			 *   +            & : & \text{bulge}
 			 * \end{array}
 			 * \f]
 			 *
@@ -383,9 +387,9 @@ namespace singular {
 			 * Works like the following,
 			 * \f[
 			 * \begin{bmatrix}
-			 *   I_1 &     &     \\
-			 *       & Q^T &     \\
-			 *       &     & I_2
+			 *   \mathbf{I}_1 &              &              \\
+			 *                & \mathbf{Q}^T &              \\
+			 *                &              & \mathbf{I}_2
 			 * \end{bmatrix}
 			 * \begin{bmatrix}
 			 *   \ddots & \ddots &   &   &   &        \\
@@ -408,10 +412,10 @@ namespace singular {
 			 * where
 			 * \f[
 			 * \begin{array}{ccl}
-			 *   Q   & : & 2 \times 2 \text{ rotator} \\
-			 *   I_1 & : & n \times n \text{ identity matrix} \\
-			 *   I_2 & : & (N-n-2) \times (N-n-2) \text{ identity matrix} \\
-			 *   +   & : & \text{bulge}
+			 *   \mathbf{Q}   & : & 2 \times 2 \text{ rotator} \\
+			 *   \mathbf{I}_1 & : & n \times n \text{ identity matrix} \\
+			 *   \mathbf{I}_2 & : & (N-n-2) \times (N-n-2) \text{ identity matrix} \\
+			 *   +            & : & \text{bulge}
 			 * \end{array}
 			 * \f]
 			 *
@@ -465,11 +469,11 @@ namespace singular {
 		 * The behavior is undefined if `M < N`.
 		 *
 		 * @param[in,out] u
-		 *     Left singular vectors to be upated.
+		 *     Left-singular-vectors to be upated.
 		 * @param[in,out] m
 		 *     Matrix to be bidiagonalized.
 		 * @param[in,out] v
-		 *     Right singular vectors to be updated.
+		 *     Right-singular-vectors to be updated.
 		 * @return
 		 *     Bidiagonal matrix built from `m`.
 		 */
@@ -494,7 +498,7 @@ namespace singular {
 		}
 
 		/**
-		 * Does a single Francis iteration.
+		 * Performs a single Francis iteration.
 		 *
 		 * Submatrices other than the top-left `n` x `n` submatrix of `m` are
 		 * regarded as already converged.
@@ -504,12 +508,12 @@ namespace singular {
 		 *  - or if `n < 2`
 		 *
 		 * @param[in,out] u
-		 *     Left singular vectors to be updated.
+		 *     Left-singular-vectors to be updated.
 		 * @param[in,out] m
 		 *     Bidiagonalized input matrix where diagonal elements are to be
 		 *     singular values after convergence.
 		 * @param[in,out] v
-		 *     Right singular vectors to be updated.
+		 *     Right-singular-vectors to be updated.
 		 * @param n
 		 *     Size of the submatrix over which the Francis iteration is to be
 		 *     performed.

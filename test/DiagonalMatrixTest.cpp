@@ -27,13 +27,16 @@ TEST(DiagonalMatrixTest, 3x1_DiagonalMatrix_should_be_fillwed_with_zeros_by_defa
 	EXPECT_EQ(0.0, m(2, 0));
 }
 
-TEST(DiagonalMatrixTest, 1x3_DiagonalMatrix_should_be_filled_with_zeros_by_default) {
-	const int M = 1;
+TEST(DiagonalMatrixTest, 2x3_DiagonalMatrix_should_be_filled_with_zeros_by_default) {
+	const int M = 2;
 	const int N = 3;
 	singular::DiagonalMatrix< M, N > m;
 	EXPECT_EQ(0.0, m(0, 0));
 	EXPECT_EQ(0.0, m(0, 1));
 	EXPECT_EQ(0.0, m(0, 2));
+	EXPECT_EQ(0.0, m(1, 0));
+	EXPECT_EQ(0.0, m(1, 1));
+	EXPECT_EQ(0.0, m(1, 2));
 }
 
 TEST(DiagonalMatrixTest, 3x3_DiagonalMatrix_can_be_initialized_from_diagonal_elements) {
@@ -66,16 +69,19 @@ TEST(DiagonalMatrixTest, 3x1_DiagonalMatrix_can_be_initialized_from_diagonal_ele
 	EXPECT_EQ(0.0, m(2, 0));
 }
 
-TEST(DiagonalMatrixTest, 1x3_DiagonalMatrix_can_be_initialized_from_diagonal_element) {
-	const int M = 1;
+TEST(DiagonalMatrixTest, 2x3_DiagonalMatrix_can_be_initialized_from_diagonal_element) {
+	const int M = 2;
 	const int N = 3;
 	const double DIAGONAL[] = {
-		1.9
+		1.9, -2.3
 	};
 	singular::DiagonalMatrix< M, N > m(DIAGONAL);
 	EXPECT_EQ(1.9, m(0, 0));
 	EXPECT_EQ(0.0, m(0, 1));
 	EXPECT_EQ(0.0, m(0, 2));
+	EXPECT_EQ(0.0, m(1, 0));
+	EXPECT_EQ(-2.3, m(1, 1));
+	EXPECT_EQ(0.0, m(1, 2));
 }
 
 TEST(DiagonalMatrixTest, Transposition_of_3x3_DiagonalMatrix_should_be_3x3_DiagonalMatrix) {

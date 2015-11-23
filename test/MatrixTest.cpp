@@ -28,6 +28,27 @@ TEST(MatrixTest, 3x3_identity_matrix_can_be_created) {
 	EXPECT_EQ(1.0, eye(2, 2));
 }
 
+TEST(MatrixTest, 3x1_identity_matrix_can_be_created) {
+	const int M = 3;
+	const int N = 1;
+	singular::Matrix< M, N > eye = singular::Matrix< M, N >::identity();
+	EXPECT_EQ(1.0, eye(0, 0));
+	EXPECT_EQ(0.0, eye(1, 0));
+	EXPECT_EQ(0.0, eye(2, 0));
+}
+
+TEST(MatrixTest, 2x3_identity_matrix_can_be_created) {
+	const int M = 2;
+	const int N = 3;
+	singular::Matrix< M, N > eye = singular::Matrix< M, N >::identity();
+	EXPECT_EQ(1.0, eye(0, 0));
+	EXPECT_EQ(0.0, eye(0, 1));
+	EXPECT_EQ(0.0, eye(0, 2));
+	EXPECT_EQ(0.0, eye(1, 0));
+	EXPECT_EQ(1.0, eye(1, 1));
+	EXPECT_EQ(0.0, eye(1, 2));
+}
+
 TEST(MatrixTest, 3x1_matrix_filled_with_values_can_be_created) {
 	const int M = 3;
 	const int N = 1;

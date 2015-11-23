@@ -57,10 +57,10 @@ namespace singular {
 		DiagonalMatrix(const DiagonalMatrix& copyee) = delete;
 
 		/**
-		 * Steals the memory block of a given diagonal matrix.
+		 * Steals the memory block from a given diagonal matrix.
 		 *
 		 * @param[in,out] copyee
-		 *     Diagonal matrix to be copied.
+		 *     Diagonal matrix from which the memory block is to be stolen.
 		 *     No loger valid after this call.
 		 */
 		DiagonalMatrix(DiagonalMatrix&& copyee) : pBlock(copyee.pBlock) {
@@ -76,13 +76,13 @@ namespace singular {
 		DiagonalMatrix& operator =(const DiagonalMatrix& copyee) = delete;
 
 		/**
-		 * Steals the memory block of a given diagonal matrix.
+		 * Steals the memory block from a given diagonal matrix.
 		 *
 		 * @param[in,out] copyee
-		 *     Diagonal matrix to be copied.
+		 *     Diagonal matrix from which the memory block is to be stolen.
 		 *     No longer valid after this call.
 		 * @return
-		 *     This diagonal matrix.
+		 *     Reference to this diagonal matrix.
 		 */
 		DiagonalMatrix& operator =(DiagonalMatrix&& copyee) {
 			this->release();
@@ -126,7 +126,10 @@ namespace singular {
 			return DiagonalMatrix< N, M >(this->pBlock);
 		}
 	private:
-		/** Releases the memory block of this matrix. */
+		/**
+		 * Releases the memory block of this matrix.
+		 * Has no effect if the memory block has already been released.
+		 */
 		inline void release() {
 			delete[] this->pBlock;
 			this->pBlock = nullptr;

@@ -1,8 +1,7 @@
 #ifndef _SINGULAR_VECTOR_H
 #define _SINGULAR_VECTOR_H
 
-#include "singular/Exception.h"
-
+#include <cassert>
 #include <cstddef>
 #include <iterator>
 #include <sstream>
@@ -85,20 +84,20 @@ namespace singular {
 			}
 		public:
 			/**
-			 * Returns the element that this iterator points to.
+			 * Returns the element that this iterator points.
 			 *
 			 * @return
-			 *     Element that this iterator points to.
+			 *     Element that this iterator points.
 			 */
 			inline U& operator *() const {
 				return *this->ptr;
 			}
 
 			/**
-			 * Returns the pointer of this iterator.
+			 * Returns the pointer to the element that this iterator points.
 			 *
 			 * @return
-			 *     Pointer of this iterator.
+			 *     Pointer to the element that this iterator points.
 			 */
 			inline U* operator ->() const {
 				return this->ptr;
@@ -186,10 +185,12 @@ namespace singular {
 		/**
 		 * Constructs an instance that wraps a given memory block.
 		 *
-		 * A vector never holds the ownership of `pBlock`.
+		 * `pBlock` must be valid during this vector is used.
+		 * It is the caller's responsibility to release `pBlock` when it is no
+		 * longer needed.
 		 *
 		 * @param pBlock
-		 *     Pointer to a memory block of the vector.
+		 *     Pointer to the memory block of the vector.
 		 * @param size
 		 *     Size of the vector.
 		 * @param delta
@@ -211,7 +212,7 @@ namespace singular {
 		/**
 		 * Returns the element at a given index in this vector.
 		 *
-		 * Undefined if `idx >= this.size()`.
+		 * The behavior is undefined if `idx >= this.size()`.
 		 *
 		 * @param idx
 		 *     Index of the element to be obtained.
@@ -226,7 +227,7 @@ namespace singular {
 		/**
 		 * Returns the element at a given index in this vector.
 		 *
-		 * Undefined if `idx >= this.size()`.
+		 * The behavior is undefined if `idx >= this.size()`.
 		 *
 		 * @param idx
 		 *     Index of the element to be obtained.
@@ -248,10 +249,10 @@ namespace singular {
 		}
 
 		/**
-		 * Starts iteration over elements in this vector.
+		 * Starts iteration over elements in this vector (const).
 		 *
 		 * @return
-		 *     Iterator that iterates elements in this vector.
+		 *     Const iterator that iterates elements in this vector.
 		 */
 		const_iterator begin() const {
 			return const_iterator::begin(*this);
@@ -268,10 +269,10 @@ namespace singular {
 		}
 
 		/**
-		 * Returns the stop iterator of this vector.
+		 * Returns the stop iterator of this vector (const).
 		 *
 		 * @return
-		 *     Stop iterator of this vector.
+		 *     Stop const iterator of this vector.
 		 */
 		const_iterator end() const {
 			return const_iterator::end(*this);
@@ -280,23 +281,22 @@ namespace singular {
 		/**
 		 * Returns a subvector of this vector.
 		 *
+		 * A returned subvector shares the elements with this vector.
+		 *
+		 * If `start == this->size()`, the subvector is empty.
+		 *
+		 * The behavior is undefined if `start < 0` or `start > this->size()`
+		 *
 		 * @param start
 		 *     Index of the beginning of the slice.
 		 * @return
 		 *     Sliced vector.
-		 * @throws Exception
-		 *     If `start > this->size()`.
 		 */
-		Vector< T > slice(size_t start) const {
-			if (this->size() < start) {
-				std::ostringstream msg;
-				msg << "start must be <= this->size() but "
-					<< start << " > " << this->size();
-				throw Exception(msg.str());
-			}
-			return Vector< T >(this->pBlock + start * this->delta,
-							   this->size() - start,
-							   this->delta);
+		Vector slice(size_t start) const {
+			assert(start >= 0 && start <= this->size());
+			return Vector(this->pBlock + start * this->delta,
+						  this->size() - start,
+						  this->delta);
 		}
 
 		/**
