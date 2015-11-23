@@ -1,3 +1,4 @@
+#include "singular/singular.h"
 #include "singular/Svd.h"
 
 #include <iostream>
@@ -25,5 +26,7 @@ int main(int argc, char** argv) {
 	std::cout << "S = " << singular::Svd< M, N >::getS(usv) << std::endl;
 	std::cout << std::endl;
 	std::cout << "V = " << singular::Svd< M, N >::getV(usv) << std::endl;
+	std::cout << std::endl;
+	std::cout << "singular version: " << SINGULAR_VERSION << std::endl;
 	return 0;
 }

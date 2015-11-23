@@ -1,0 +1,7 @@
+#ifndef _SINGULAR_SINGULAR_H
+#define _SINGULAR_SINGULAR_H
+
+/** The version of the singular library. */
+#define SINGULAR_VERSION  "@PROJECT_VERSION@"
+
+#endif

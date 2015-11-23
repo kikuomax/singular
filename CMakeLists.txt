@@ -44,8 +44,12 @@ find_package (Doxygen)
 option (GENERATE_DOCUMENTATION
 	"Generate Doxygen documentation" ${DOXYGEN_FOUND})
 
+# configures the project header
+configure_file (src/singular/singular.h.in src/singular/singular.h @ONLY)
+
 include_directories (
 	src
+	${PROJECT_BINARY_DIR}/src
 	${GTEST_INCLUDE_DIRS})
 
 add_executable (svd-test test/test.cpp)
@@ -77,3 +81,14 @@ if (GENERATE_DOCUMENTATION)
 		WORKING_DIRECTORY ${PROJECT_BINARY_DIR}
 		COMMENT "Generating Doxygen documentation")
 endif ()
+
+# installs headers
+install (FILES
+	src/singular/DiagonalMatrix.h
+	src/singular/Matrix.h
+	src/singular/Reflector.h
+	src/singular/Rotator.h
+	src/singular/Svd.h
+	src/singular/Vector.h
+	${PROJECT_BINARY_DIR}/src/singular/singular.h
+	DESTINATION include/singular)
