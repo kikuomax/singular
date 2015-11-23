@@ -57,6 +57,7 @@ if (GENERATE_TESTS)
 	add_executable (singular-test
 		test/VectorTest.cpp
 		test/MatrixTest.cpp
+		test/DiagonalMatrixTest.cpp
 		test/ReflectorTest.cpp
 		test/RotatorTest.cpp
 		test/SvdTest.cpp)

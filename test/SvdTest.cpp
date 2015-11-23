@@ -81,7 +81,8 @@ TEST_F(SvdOn5x4MatrixTest, Multiplication_of_USV_should_be_input_matrix) {
 
 TEST_F(SvdOn5x4MatrixTest, 4_positive_singular_values_should_be_produced) {
 	const double ROUNDED_ERROR = 1.0e-14;
-	const singular::Matrix< M, N >& s = singular::Svd< M, N >::getS(this->usv);
+	const singular::DiagonalMatrix< M, N >& s =
+		singular::Svd< M, N >::getS(this->usv);
 	EXPECT_NEAR(21.3113428837071, s(0, 0), ROUNDED_ERROR * 10);
 	EXPECT_NEAR(6.71730295404777, s(1, 1), ROUNDED_ERROR);
 	EXPECT_NEAR(5.77467474261999, s(2, 2), ROUNDED_ERROR);
@@ -168,7 +169,8 @@ TEST_F(SvdOn4x5MatrixTest, 4_positive_singular_values_should_be_produced) {
 	// reference values were calculated at the following site
 	// http://www.bluebit.gr/matrix-calculator/
 	const double ROUNDED_ERROR = 1.0e-14;
-	const singular::Matrix< M, N >& s = singular::Svd< M, N >::getS(this->usv);
+	const singular::DiagonalMatrix< M, N >& s =
+		singular::Svd< M, N >::getS(this->usv);
 	EXPECT_NEAR(15.0341927179405, s(0, 0), ROUNDED_ERROR * 10);
 	EXPECT_NEAR(10.5443636529196, s(1, 1), ROUNDED_ERROR * 10);
 	EXPECT_NEAR(5.37588907505156, s(2, 2), ROUNDED_ERROR);
@@ -252,7 +254,8 @@ TEST_F(SvdOn3x3Rank2MatrixTest, Multiplication_of_USV_should_be_input_matrix) {
 
 TEST_F(SvdOn3x3Rank2MatrixTest, 2_positive_and_1_zero_singular_values_should_be_produced) {
 	const double ROUNDED_ERROR = 1.0e-14;
-	const singular::Matrix< M, N >& s = singular::Svd< M, N >::getS(this->usv);
+	const singular::DiagonalMatrix< M, N >& s =
+		singular::Svd< M, N >::getS(this->usv);
 	EXPECT_NEAR(7.11714246017378, s(0, 0), ROUNDED_ERROR);
 	EXPECT_NEAR(4.04305369758943, s(1, 1), ROUNDED_ERROR);
 	EXPECT_NEAR(0.0, s(2, 2), ROUNDED_ERROR);
@@ -336,7 +339,8 @@ TEST_F(SvdOn7x5SparseMatrixTest, Multiplication_of_USV_should_be_input_matrix) {
 
 TEST_F(SvdOn7x5SparseMatrixTest, 5_positive_singular_values_should_be_produced) {
 	const double ROUNDED_ERROR = 1.0e-14;
-	const singular::Matrix< M, N >& s = singular::Svd< M, N >::getS(this->usv);
+	const singular::DiagonalMatrix< M, N >& s =
+		singular::Svd< M, N >::getS(this->usv);
 	EXPECT_NEAR(14.0545840635182, s(0, 0), ROUNDED_ERROR * 10);
 	EXPECT_NEAR(11.7483576435793, s(1, 1), ROUNDED_ERROR * 10);
 	EXPECT_NEAR(11.5450620618378, s(2, 2), ROUNDED_ERROR * 10);
@@ -406,7 +410,8 @@ TEST_F(SvdOn2x2MatrixTest, Multiplication_of_USV_should_be_input_matrix) {
 
 TEST_F(SvdOn2x2MatrixTest, 2_positive_singular_values_should_be_produced) {
 	const double ROUNDED_ERROR = 1.0e-14;
-	const singular::Matrix< M, N >& s = singular::Svd< M, N >::getS(this->usv);
+	const singular::DiagonalMatrix< M, N >& s =
+		singular::Svd< M, N >::getS(this->usv);
 	EXPECT_NEAR(1.0, s(0, 0), ROUNDED_ERROR);
 	EXPECT_NEAR(1.0, s(0, 0), ROUNDED_ERROR);
 }
@@ -468,7 +473,8 @@ TEST_F(SvdOn2x1MatrixTest, Multiplication_of_USV_should_be_input_matrix) {
 
 TEST_F(SvdOn2x1MatrixTest, 1_positive_singular_value_should_be_produced) {
 	const double ROUNDED_ERROR = 1.0e-14;
-	const singular::Matrix< M, N >& s = singular::Svd< M, N >::getS(this->usv);
+	const singular::DiagonalMatrix< M, N >& s =
+		singular::Svd< M, N >::getS(this->usv);
 	EXPECT_NEAR(5.0, s(0, 0), ROUNDED_ERROR);
 }
 
@@ -524,7 +530,8 @@ TEST_F(SvdOn1x1MatrixTest, Multiplication_of_USV_should_be_input_matrix) {
 
 TEST_F(SvdOn1x1MatrixTest, 1_positive_singular_value_should_be_produced) {
 	const double ROUNDED_ERROR = 1.0e-14;
-	const singular::Matrix< M, N >& s = singular::Svd< M, N >::getS(this->usv);
+	const singular::DiagonalMatrix< M, N >& s =
+		singular::Svd< M, N >::getS(this->usv);
 	EXPECT_NEAR(1.0, s(0, 0), ROUNDED_ERROR);
 }
 
@@ -587,7 +594,8 @@ TEST_F(SvdOn5x4ZerosTest, Right_singular_matrix_should_be_identity_matrix) {
 
 TEST_F(SvdOn5x4ZerosTest, Singular_values_should_be_zeros) {
 	const double ROUNDED_ERROR = 1.0e-14;
-	const singular::Matrix< M, N >& s = singular::Svd< M, N >::getS(this->usv);
+	const singular::DiagonalMatrix< M, N >& s =
+		singular::Svd< M, N >::getS(this->usv);
 	for (int i = 0; i < N; ++i) {
 		EXPECT_NEAR(0.0, s(i, i), ROUNDED_ERROR);
 	}

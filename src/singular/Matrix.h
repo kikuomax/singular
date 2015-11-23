@@ -51,7 +51,7 @@ namespace singular {
 		}
 
 		/** Releases the allocated block. */
-		virtual ~Matrix() {
+		~Matrix() {
 			this->release();
 		}
 
@@ -201,45 +201,30 @@ namespace singular {
 			return *this;
 		}
 
-		/**
-		 * Multiplies given two matrices.
-		 *
-		 * @tparam M2
-		 *     Number of rows in the left-hand-side matrix.
-		 * @tparam N2
-		 *     Number of columns in the left-hand-side matrix.
-		 *     Number of rows in the right-hand-side matrix as well.
-		 * @tparam L
-		 *     Number of columns in the right-hand-side matrix.
-		 * @param lhs
-		 *     Left-hand side of the multiplication.
-		 * @param rhs
-		 *     Right-hand side of the multiplication.
-		 * @return
-		 *     Product of `lhs` and `rhs`.
-		 */
+		// Defined outside
 		template < int M2, int N2, int L >
 		friend Matrix< M2, L > operator *(const Matrix< M2, N2 >& lhs,
-										  const Matrix< N2, L >& rhs)
-		{
-			double* pBlock = new double[M2 * L];
-			double* pDst = pBlock;
-			for (int i = 0; i < M2; ++i) {
-				for (int l = 0; l < L; ++l) {
-					double* pL = lhs.pBlock + i * N2;
-					double* pR = rhs.pBlock + l;
-					double x = 0.0;
-					for (int j = 0; j < N2; ++j) {
-						x += *pL * *pR;
-						++pL;
-						pR += L;
-					}
-					*pDst = x;
-					++pDst;
-				}
-			}
-			return Matrix< M2, L >(pBlock);
-		}
+										  const Matrix< N2, L >& rhs);
+
+		// Defined outside
+		template <
+			int M2, int N2, int L, template < int, int > class MatrixLike >
+		friend Matrix< M2, L > operator *(const Matrix< M2, N2 >& lhs,
+										  const MatrixLike< N2, L >& rhs);
+
+		// Defined outside
+		template <
+			int M2, int N2, int L, template < int, int > class MatrixLike >
+		friend Matrix< M2, L > operator *(const MatrixLike< M2, N2 >& lhs,
+										  const Matrix< N2, L >& rhs);
+
+		// Defined outside
+		template <
+			int M2, int N2, int L,
+			template < int, int > class MatrixLike1,
+			template < int, int > class MatrixLike2 >
+		friend Matrix< M2, L > operator *(const MatrixLike1< M2, N2 >& lhs,
+										  const MatrixLike2< N2, L >& rhs);
 
 		/**
 		 * Returns the transposition of this matrix.
@@ -350,9 +335,212 @@ namespace singular {
 		}
 	};
 
-	/** Writes a given matrix to a given stream. */
-	template < int M, int N >
-	std::ostream& operator <<(std::ostream& out, const Matrix< M, N >& m) {
+	/**
+	 * Multiplies given two matrices.
+	 *
+	 * @tparam M
+	 *     Number of rows in the left-hand-side matrix.
+	 * @tparam N
+	 *     Number of columns in the left-hand-side matrix.
+	 *     Number of rows in the right-hand-side matrix as well.
+	 * @tparam L
+	 *     Number of columns in the right-hand-side matrix.
+	 * @param lhs
+	 *     Left-hand side of the multiplication.
+	 * @param rhs
+	 *     Right-hand side of the multiplication.
+	 * @return
+	 *     Product of `lhs` and `rhs`.
+	 */
+	template < int M, int N, int L >
+	Matrix< M, L > operator *(const Matrix< M, N >& lhs,
+							  const Matrix< N, L >& rhs)
+	{
+		double* pBlock = new double[M * L];
+		double* pDst = pBlock;
+		for (int i = 0; i < M; ++i) {
+			for (int l = 0; l < L; ++l) {
+				double* pL = lhs.pBlock + i * N;
+				double* pR = rhs.pBlock + l;
+				double x = 0.0;
+				for (int j = 0; j < N; ++j) {
+					x += *pL * *pR;
+					++pL;
+					pR += L;
+				}
+				*pDst = x;
+				++pDst;
+			}
+		}
+		return Matrix< M, L >(pBlock);
+	}
+
+	/**
+	 * Multiplies given two matrices.
+	 *
+	 * `MatrixLike` must overload the function-call operator `()` which
+	 * takes a row index `i` and column index `j` and returns the element at
+	 * the ith row and jth column.
+	 * The function prototype should look like the following,
+	 *  - `double operator ()(int i, int j) const`
+	 *
+	 * @tparam M
+	 *     Number of rows in the left-hand-side matrix.
+	 * @tparam N
+	 *     Number of columns in the left-hand-side matrix.
+	 *     Number of rows in the right-hand-side matrix.
+	 * @tparam L
+	 *     Number of columns in the right-hand-side matrix.
+	 * @tparam MatrixLike
+	 *     Type of the right-hand-side matrix.
+	 * @param lhs
+	 *     Left-hand-side of the multiplication.
+	 * @param rhs
+	 *     Right-hand-side of the multiplication.
+	 * @return
+	 *     Product of `lhs` and `rhs`.
+	 */
+	template < int M, int N, int L, template < int, int > class MatrixLike >
+	Matrix< M, L > operator *(const Matrix< M, N >& lhs,
+							  const MatrixLike< N, L >& rhs)
+	{
+		double* pBlock = new double[M * L];
+		double* pDst = pBlock;
+		for (int i = 0; i < M; ++i) {
+			for (int j = 0; j < L; ++j) {
+				const double* pL = lhs.pBlock + i * N;
+				double x = 0.0;
+				for (int k = 0; k < N; ++k) {
+					x += *pL * rhs(k, j);
+					++pL;
+				}
+				*pDst = x;
+				++pDst;
+			}
+		}
+		return Matrix< M, L >(pBlock);
+	}
+
+	/**
+	 * Multiplies given two matrices.
+	 *
+	 * `MatrixLike` must overload the function-call operator `()` which
+	 * takes a row index `i` and column index `j` and returns the element at
+	 * the ith row and jth column.
+	 * The function prototype should look like the following,
+	 *  - `double operator ()(int i, int j) const`
+	 *
+	 * @tparam M
+	 *     Number of rows in the left-hand-side matrix.
+	 * @tparam N
+	 *     Number of columns in the left-hand-side matrix.
+	 *     Number of rows in the right-hand-side matrix.
+	 * @tparam L
+	 *     Number of columns in the right-hand-side matrix.
+	 * @tparam MatrixLike
+	 *     Type of the left-hand-side matrix.
+	 * @param lhs
+	 *     Left-hand-side of the multiplication.
+	 * @param rhs
+	 *     Right-hand-side of the multiplication.
+	 * @return
+	 *     Product of `lhs` and `rhs`.
+	 */
+	template < int M, int N, int L, template < int, int > class MatrixLike >
+	Matrix< M, L > operator *(const MatrixLike< M, N >& lhs,
+							  const Matrix< N, L >& rhs)
+	{
+		double* pBlock = new double[M * L];
+		double* pDst = pBlock;
+		for (int i = 0; i < M; ++i) {
+			for (int j = 0; j < L; ++j) {
+				const double* pR = rhs.pBlock + j;
+				double x = 0.0;
+				for (int k = 0; k < N; ++k) {
+					x += lhs(i, k) * *pR;
+					pR += L;
+				}
+				*pDst = x;
+				++pDst;
+			}
+		}
+		return Matrix< M, L >(pBlock);
+	}
+
+	/**
+	 * Multiplies given two matrices.
+	 *
+	 * Both of `MatrixLike1` and `MatrixLike2` must overload the
+	 * function-call operator `()` which takes a row index `i` and column
+	 * index `j` and returns the element at ith row and jth column.
+	 * The function prototype should look like the following,
+	 *  - `double operator ()(int i, int j) const`
+	 *
+	 * @tparam M
+	 *     Number of rows in the left-hand-side matrix.
+	 * @tparam N
+	 *     Number of columns in the left-hand-side matrix.
+	 *     Number of rows in the right-hand-side matrix.
+	 * @tparam L
+	 *     Number of columns in the right-hand-side matrix.
+	 * @tparam MatrixLike1
+	 *     Type of the left-hand-side matrix.
+	 * @tparam MatrixLike2
+	 *     Type of the right-hand-side matrix.
+	 * @param lhs
+	 *     Left-hand-side of the multiplication.
+	 * @param rhs
+	 *     Right-hand-side of the multiplication.
+	 * @return
+	 *     Product of `lhs` and `rhs`.
+	 */
+	template <
+		int M, int N, int L,
+		template < int, int > class MatrixLike1,
+		template < int, int > class MatrixLike2 >
+	Matrix< M, L > operator *(const MatrixLike1< M, N >& lhs,
+							  const MatrixLike2< N, L >& rhs)
+	{
+		double* pBlock = new double[M * L];
+		double* pDst = pBlock;
+		for (int i = 0; i < M; ++i) {
+			for (int j = 0; j < L; ++j) {
+				double x = 0.0;
+				for (int k = 0; k < N; ++k) {
+					x += lhs(i, k) * rhs(k, j);
+				}
+				*pDst = x;
+				++pDst;
+			}
+		}
+		return Matrix< M, L >(pBlock);
+	}
+
+
+	/**
+	 * Writes a given matrix to a given stream.
+	 *
+	 * `MatrixLike` should overload the function-call operator `()` which takes
+	 * a row index `i` and column index `j` and returns the element at the ith
+	 * row and jth column.
+	 * The function prototype should look like the following,
+	 *  - `double operator ()(int i, int j) const`
+	 *
+	 * @tparam M
+	 *     Number of rows in the matrix to be written.
+	 * @tparam N
+	 *     Number of columns in the matrix to be written.
+	 * @tparam MatrixLike
+	 *     Type of the matrix to be written.
+	 * @param out
+	 *     Output stream where the matrix is to be written.
+	 * @param m
+	 *     Matrix to be written.
+	 * @return
+	 *     `out`.
+	 */
+	template < int M, int N, template < int, int > class MatrixLike >
+	std::ostream& operator <<(std::ostream& out, const MatrixLike< M, N >& m) {
 		out << '[' << std::endl;
 		for (int i = 0; i < M; ++i) {
 			for (int j = 0; j < N; ++j) {

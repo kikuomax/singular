@@ -1,6 +1,7 @@
 #ifndef _SINGULAR_SVD_H
 #define _SINGULAR_SVD_H
 
+#include "singular/DiagonalMatrix.h"
 #include "singular/Matrix.h"
 #include "singular/Reflector.h"
 #include "singular/Rotator.h"
@@ -28,7 +29,7 @@ namespace singular {
 		 * Use `getU`, `getS` and `getV` instead of `std::get`.
 		 */
 		typedef std::tuple< Matrix< M, M >,
-							Matrix< M, N >,
+							DiagonalMatrix< M, N >,
 							Matrix< N, N > > USV;
 
 		/** Returns the left singular vectors from a given `USV` tuple. */
@@ -37,7 +38,7 @@ namespace singular {
 		}
 
 		/** Returns the singular values from a given `USV` tuple. */
-		static inline const Matrix< M, N >& getS(const USV& usv) {
+		static inline const DiagonalMatrix< M, N >& getS(const USV& usv) {
 			return std::get< 1 >(usv);
 		}
 
@@ -97,10 +98,10 @@ namespace singular {
 			}
 			// copies the diagonal elements
 			// and makes all singular values positive
-			Matrix< M, N > s;
+			double ss[N];
 			for (int i = 0; i < N; ++i) {
 				if (m2(i, i) < 0) {
-					s(i, i) = -m2(i, i);
+					ss[i] = -m2(i, i);
 					// inverts the sign of the right singular vector
 					Vector< double > vi = v.column(i);
 					std::transform(
@@ -109,7 +110,7 @@ namespace singular {
 							return -x;
 						});
 				} else {
-					s(i, i) = m2(i, i);
+					ss[i] = m2(i, i);
 				}
 			}
 			// sorts singular values in descending order if necessary
@@ -117,20 +118,33 @@ namespace singular {
 			bool sortNeeded = false;
 			for (int i = 0; i < M; ++i) {
 				shuffle[i] = i;
-				sortNeeded =
-					sortNeeded || (i < N - 1 && s(i, i) < s(i + 1, i + 1));
+				sortNeeded = sortNeeded || (i < N - 1 && ss[i] < ss[i + 1]);
 			}
 			if (sortNeeded) {
 				// shuffles the N (<= M) singular values
-				std::sort(shuffle, shuffle + N, [&s](int i, int j) {
-					return s(i, i) > s(j, j);  // descending order
+				std::sort(shuffle, shuffle + N, [ss](int i, int j) {
+					return ss[i] > ss[j];  // descending order
 				});
+				double ss2[M];
+				std::transform(shuffle, shuffle + N, ss2, [ss](int i) {
+					return ss[i];
+				});
+				/*
+				Matrix< M, N > s;
+				for (int i = 0; i < N; ++i) {
+					s(i, i) = ss[shuffle[i]];
+				}*/
 				return std::make_tuple(u.shuffleColumns(shuffle),
-									   s.shuffleColumns(shuffle).shuffleRows(shuffle),
+									   DiagonalMatrix< M, N >(ss2),
 									   v.shuffleColumns(shuffle));
 			} else {
+				/*
+				Matrix< M, N > s;
+				for (int i = 0; i < N; ++i) {
+					s(i, i) = ss[i];
+				}*/
 				return std::make_tuple(std::move(u),
-									   std::move(s),
+									   DiagonalMatrix< M, N >(ss),
 									   std::move(v));
 			}
 		}
