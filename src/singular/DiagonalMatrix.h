@@ -53,9 +53,6 @@ namespace singular {
 			memcpy(this->pBlock, values, sizeof(double) * L);
 		}
 
-		/** Copy constructor is not allowed. */
-		DiagonalMatrix(const DiagonalMatrix& copyee) = delete;
-
 		/**
 		 * Steals the memory block from a given diagonal matrix.
 		 *
@@ -71,9 +68,6 @@ namespace singular {
 		~DiagonalMatrix() {
 			this->release();
 		}
-
-		/** Copy assignment is not allowed. */
-		DiagonalMatrix& operator =(const DiagonalMatrix& copyee) = delete;
 
 		/**
 		 * Steals the memory block from a given diagonal matrix.
@@ -126,6 +120,22 @@ namespace singular {
 			return DiagonalMatrix< N, M >(this->pBlock);
 		}
 	private:
+#if defined(_MSC_VER) && _MSC_VER < 1800
+		/** Copy constructor is not allowed. */
+		DiagonalMatrix(const DiagonalMatrix& copyee) {}
+
+		/** Copy assignment is not allowed. */
+		DiagonalMatrix& operator =(const DiagonalMatrix& copyee) {
+			return *this;
+		}
+#else
+		/** Copy constructor is not allowed. */
+		DiagonalMatrix(const DiagonalMatrix& copyee) = delete;
+
+		/** Copy assignment is not allowed. */
+		DiagonalMatrix& operator =(const DiagonalMatrix& copyee) = delete;
+#endif
+
 		/**
 		 * Releases the memory block of this matrix.
 		 * Has no effect if the memory block has already been released.

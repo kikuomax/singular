@@ -214,16 +214,10 @@ namespace singular {
 				copyee.pBlock = nullptr;
 			}
 
-			/** Simple copy is forbidden. */
-			BidiagonalMatrix(const BidiagonalMatrix& copyee) = delete;
-
 			/** Releases the memory block for bidiagonal elements. */
 			inline ~BidiagonalMatrix() {
 				this->releaseBlock();
 			}
-
-			/** Simple assignment is forbidden. */
-			void operator =(const BidiagonalMatrix& copyee) = delete;
 
 			/**
 			 * Returns the element at given row and column.
@@ -455,6 +449,20 @@ namespace singular {
 				return newBulge;
 			}
 		private:
+#if defined(_MSC_VER) && _MSC_VER < 1800
+			/** Simple copy is forbidden. */
+			BidiagonalMatrix(const BidiagonalMatrix& copyee) {}
+
+			/** Simple assignment is forbidden. */
+			void operator =(const BidiagonalMatrix& copyee) {}
+#else
+			/** Simple copy is forbidden. */
+			BidiagonalMatrix(const BidiagonalMatrix& copyee) = delete;
+
+			/** Simple assignment is forbidden. */
+			void operator =(const BidiagonalMatrix& copyee) = delete;
+#endif
+
 			/** Releases the memory block for bidiagonal elements. */
 			inline void releaseBlock() {
 				delete[] this->pBlock;

@@ -28,17 +28,19 @@ namespace singular {
 		 */
 		double* pBlock;
 
-		// transposed matrix is a friend
+#if defined(_MSC_VER) && _MSC_VER < 1800
+		// every Matrix is a friend
+		friend class Matrix;
+#else
+		// transposed Matrix is a friend
 		friend class Matrix< N, M >;
+#endif
 	public:
 		/** Initializes a matrix filled with zeros. */
 		Matrix() {
 			this->pBlock = new double[M * N];
 			std::fill(this->pBlock, this->pBlock + (M * N), 0.0);
 		}
-
-		/** Simple copy is not allowed. */
-		Matrix(const Matrix& copyee) = delete;
 
 		/**
 		 * Steals the memory block from a given matrix.
@@ -71,9 +73,6 @@ namespace singular {
 			copyee.pBlock = 0;
 			return *this;
 		}
-
-		/** Simple copy is not allowed. */
-		Matrix& operator =(const Matrix& copyee) = delete;
 
 		/**
 		 * Creates a clone of this matrix.
@@ -238,6 +237,153 @@ namespace singular {
 		friend Matrix< M2, L > operator *(const Matrix< M2, N2 >& lhs,
 										  const Matrix< N2, L >& rhs);
 
+#if defined(_MSC_VER) && _MSC_VER < 1800
+		// Visual Studio 2012 does not like a friend function has templates
+		// in its type parameters
+
+		/**
+		 * Multiplies given two matrices.
+		 *
+		 * `MatrixLike` must overload the function-call operator `()` which
+		 * takes a row index `i` and column index `j` and returns the element at
+		 * the ith row and jth column.
+		 * The function prototype should look like the following,
+		 *  - `double operator ()(int i, int j) const`
+		 *
+		 * @tparam M2
+		 *     Number of rows in the left-hand-side matrix.
+		 * @tparam N2
+		 *     Number of columns in the left-hand-side matrix.
+		 *     Number of rows in the right-hand-side matrix.
+		 * @tparam L
+		 *     Number of columns in the right-hand-side matrix.
+		 * @tparam MatrixLike
+		 *     Type of the right-hand-side matrix.
+		 * @param lhs
+		 *     Left-hand-side of the multiplication.
+		 * @param rhs
+		 *     Right-hand-side of the multiplication.
+		 * @return
+		 *     Product of `lhs` and `rhs`.
+		 */
+		template <
+			int M2, int N2, int L, template < int, int > class MatrixLike >
+		static Matrix< M2, L > multiply(const Matrix< M2, N2 >& lhs,
+										const MatrixLike< N2, L >& rhs)
+		{
+			double* pBlock = new double[M2 * L];
+			double* pDst = pBlock;
+			for (int i = 0; i < M2; ++i) {
+				for (int j = 0; j < L; ++j) {
+					const double* pL = lhs.pBlock + i * N2;
+					double x = 0.0;
+					for (int k = 0; k < N2; ++k) {
+						x += *pL * rhs(k, j);
+						++pL;
+					}
+					*pDst = x;
+					++pDst;
+				}
+			}
+			return Matrix< M2, L >(pBlock);
+		}
+
+		/**
+		 * Multiplies given two matrices.
+		 *
+		 * `MatrixLike` must overload the function-call operator `()` which
+		 * takes a row index `i` and column index `j` and returns the element at
+		 * the ith row and jth column.
+		 * The function prototype should look like the following,
+		 *  - `double operator ()(int i, int j) const`
+		 *
+		 * @tparam M2
+		 *     Number of rows in the left-hand-side matrix.
+		 * @tparam N2
+		 *     Number of columns in the left-hand-side matrix.
+		 *     Number of rows in the right-hand-side matrix.
+		 * @tparam L
+		 *     Number of columns in the right-hand-side matrix.
+		 * @tparam MatrixLike
+		 *     Type of the left-hand-side matrix.
+		 * @param lhs
+		 *     Left-hand-side of the multiplication.
+		 * @param rhs
+		 *     Right-hand-side of the multiplication.
+		 * @return
+		 *     Product of `lhs` and `rhs`.
+		 */
+		template <
+			int M2, int N2, int L, template < int, int > class MatrixLike >
+		static Matrix< M2, L > multiply(const MatrixLike< M2, N2 >& lhs,
+										const Matrix< N2, L >& rhs)
+		{
+			double* pBlock = new double[M2 * L];
+			double* pDst = pBlock;
+			for (int i = 0; i < M2; ++i) {
+				for (int j = 0; j < L; ++j) {
+					const double* pR = rhs.pBlock + j;
+					double x = 0.0;
+					for (int k = 0; k < N2; ++k) {
+						x += lhs(i, k) * *pR;
+						pR += L;
+					}
+					*pDst = x;
+					++pDst;
+				}
+			}
+			return Matrix< M2, L >(pBlock);
+		}
+
+		/**
+		 * Multiplies given two matrices.
+		 *
+		 * Both of `MatrixLike1` and `MatrixLike2` must overload the
+		 * function-call operator `()` which takes a row index `i` and column
+		 * index `j` and returns the element at ith row and jth column.
+		 * The function prototype should look like the following,
+		 *  - `double operator ()(int i, int j) const`
+		 *
+		 * @tparam M2
+		 *     Number of rows in the left-hand-side matrix.
+		 * @tparam N2
+		 *     Number of columns in the left-hand-side matrix.
+		 *     Number of rows in the right-hand-side matrix.
+		 * @tparam L
+		 *     Number of columns in the right-hand-side matrix.
+		 * @tparam MatrixLike1
+		 *     Type of the left-hand-side matrix.
+		 * @tparam MatrixLike2
+		 *     Type of the right-hand-side matrix.
+		 * @param lhs
+		 *     Left-hand-side of the multiplication.
+		 * @param rhs
+		 *     Right-hand-side of the multiplication.
+		 * @return
+		 *     Product of `lhs` and `rhs`.
+		 */
+		template <
+			int M2, int N2, int L,
+			template < int, int > class MatrixLike1,
+			template < int, int > class MatrixLike2 >
+		static Matrix< M2, L > multiply(const MatrixLike1< M2, N2 >& lhs,
+										const MatrixLike2< N2, L >& rhs)
+		{
+			double* pBlock = new double[M2 * L];
+			double* pDst = pBlock;
+			for (int i = 0; i < M2; ++i) {
+				for (int j = 0; j < L; ++j) {
+					double x = 0.0;
+					for (int k = 0; k < N2; ++k) {
+						x += lhs(i, k) * rhs(k, j);
+					}
+					*pDst = x;
+					++pDst;
+				}
+			}
+			return Matrix< M2, L >(pBlock);
+		}
+#else
 		// Defined outside
 		template <
 			int M2, int N2, int L, template < int, int > class MatrixLike >
@@ -257,6 +403,7 @@ namespace singular {
 			template < int, int > class MatrixLike2 >
 		friend Matrix< M2, L > operator *(const MatrixLike1< M2, N2 >& lhs,
 										  const MatrixLike2< N2, L >& rhs);
+#endif
 
 		/**
 		 * Returns the transposition of this matrix.
@@ -356,6 +503,22 @@ namespace singular {
 		 */
 		Matrix(double* pBlock) : pBlock(pBlock) {}
 
+#if defined(_MSC_VER) && _MSC_VER < 1800
+		/** Simple copy is not allowed. */
+		Matrix(const Matrix& copyee) {}
+
+		/** Simple copy is not allowed. */
+		Matrix& operator =(const Matrix& copyee) {
+			return *this;
+		}
+#else
+		/** Simple copy is not allowed. */
+		Matrix(const Matrix& copyee) = delete;
+
+		/** Simple copy is not allowed. */
+		Matrix& operator =(const Matrix& copyee) = delete;
+#endif
+
 		/**
 		 * Releases the memory block of this matrix.
 		 *
@@ -436,6 +599,9 @@ namespace singular {
 	Matrix< M, L > operator *(const Matrix< M, N >& lhs,
 							  const MatrixLike< N, L >& rhs)
 	{
+#if defined(_MSC_VER) && _MSC_VER < 1800
+		return Matrix< M, N >::multiply(lhs, rhs);
+#else
 		double* pBlock = new double[M * L];
 		double* pDst = pBlock;
 		for (int i = 0; i < M; ++i) {
@@ -451,6 +617,7 @@ namespace singular {
 			}
 		}
 		return Matrix< M, L >(pBlock);
+#endif
 	}
 
 	/**
@@ -482,6 +649,9 @@ namespace singular {
 	Matrix< M, L > operator *(const MatrixLike< M, N >& lhs,
 							  const Matrix< N, L >& rhs)
 	{
+#if defined(_MSC_VER) && _MSC_VER < 1800
+		return Matrix< M, L >::multiply(lhs, rhs);
+#else
 		double* pBlock = new double[M * L];
 		double* pDst = pBlock;
 		for (int i = 0; i < M; ++i) {
@@ -497,6 +667,7 @@ namespace singular {
 			}
 		}
 		return Matrix< M, L >(pBlock);
+#endif
 	}
 
 	/**
@@ -533,6 +704,9 @@ namespace singular {
 	Matrix< M, L > operator *(const MatrixLike1< M, N >& lhs,
 							  const MatrixLike2< N, L >& rhs)
 	{
+#if defined(_MSC_VER) && _MSC_VER < 1800
+		return Matrix< M, L >::multiply(lhs, rhs);
+#else
 		double* pBlock = new double[M * L];
 		double* pDst = pBlock;
 		for (int i = 0; i < M; ++i) {
@@ -546,6 +720,7 @@ namespace singular {
 			}
 		}
 		return Matrix< M, L >(pBlock);
+#endif
 	}
 
 

@@ -69,6 +69,12 @@ if (GENERATE_TESTS)
 		test/RotatorTest.cpp
 		test/SvdTest.cpp)
 
+	# old Visual Studio needs a tweak
+	if (MSVC AND MSVC_VERSION LESS 1800)
+		set_target_properties (singular-test
+			PROPERTIES COMPILE_FLAGS "-D_VARIADIC_MAX=10")
+	endif ()
+
 	target_link_libraries (singular-test ${GTEST_BOTH_LIBRARIES})
 
 	add_test (singular-test-all singular-test)
