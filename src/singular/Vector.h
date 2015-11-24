@@ -1,6 +1,8 @@
 #ifndef _SINGULAR_VECTOR_H
 #define _SINGULAR_VECTOR_H
 
+#include "singular/singular.h"
+
 #include <cassert>
 #include <cstddef>
 #include <iterator>

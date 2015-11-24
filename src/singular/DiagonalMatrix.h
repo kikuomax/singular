@@ -1,6 +1,8 @@
 #ifndef _SINGULAR_DIAGONAL_MATRIX_H
 #define _SINGULAR_DIAGONAL_MATRIX_H
 
+#include "singular/singular.h"
+
 #include <algorithm>
 #include <cassert>
 #include <cstring>
@@ -60,14 +62,13 @@ namespace singular {
 		 *     Diagonal matrix from which the memory block is to be stolen.
 		 *     No loger valid after this call.
 		 */
-#if defined(_MSC_VER) && _MSC_VER < 1700
-		// Visual Studio 2010 does not have rvalue references
-		DiagonalMatrix(const DiagonalMatrix& copyee) : pBlock(copyee.pBlock) {
-			const_cast< DiagonalMatrix& >(copyee).pBlock = nullptr;
-		}
-#else
+#if SINGULAR_RVALUE_REFERENCE_SUPPORTED
 		DiagonalMatrix(DiagonalMatrix&& copyee) : pBlock(copyee.pBlock) {
 			copyee.pBlock = nullptr;
+		}
+#else
+		DiagonalMatrix(const DiagonalMatrix& copyee) : pBlock(copyee.pBlock) {
+			const_cast< DiagonalMatrix& >(copyee).pBlock = nullptr;
 		}
 #endif
 
@@ -85,17 +86,17 @@ namespace singular {
 		 * @return
 		 *     Reference to this diagonal matrix.
 		 */
-#if defined(_MSC_VER) && _MSC_VER < 1700
-		DiagonalMatrix& operator =(const DiagonalMatrix& copyee) {
-#else
+#if SINGULAR_RVALUE_REFERENCE_SUPPORTED
 		DiagonalMatrix& operator =(DiagonalMatrix&& copyee) {
+#else
+		DiagonalMatrix& operator =(const DiagonalMatrix& copyee) {
 #endif
 			this->release();
 			this->pBlock = copyee.pBlock;
-#if defined(_MSC_VER) && _MSC_VER < 1700
-			const_cast< DiagonalMatrix& >(copyee).pBlock = nullptr;
-#else
+#if SINGULAR_RVALUE_REFERENCE_SUPPORTED
 			copyee.pBlock = nullptr;
+#else
+			const_cast< DiagonalMatrix& >(copyee).pBlock = nullptr;
 #endif
 			return *this;
 		}
@@ -135,11 +136,13 @@ namespace singular {
 			return DiagonalMatrix< N, M >(this->pBlock);
 		}
 	private:
-#if defined(_MSC_VER) && _MSC_VER < 1800
-#if _MSC_VER >= 1700
-		// Visual Studio 2012 does not like "delete" stuff
-		// but supports rvalue references
+#if SINGULAR_FUNCTION_DELETION_SUPPORTED
+		/** Copy constructor is not allowed. */
+		DiagonalMatrix(const DiagonalMatrix& copyee) = delete;
 
+		/** Copy assignment is not allowed. */
+		DiagonalMatrix& operator =(const DiagonalMatrix& copyee) = delete;
+#elif SINGULAR_RVALUE_REFERENCE_SUPPORTED
 		/** Copy constructor is not allowed. */
 		DiagonalMatrix(const DiagonalMatrix& copyee) {}
 
@@ -147,13 +150,6 @@ namespace singular {
 		DiagonalMatrix& operator =(const DiagonalMatrix& copyee) {
 			return *this;
 		}
-#endif
-#else
-		/** Copy constructor is not allowed. */
-		DiagonalMatrix(const DiagonalMatrix& copyee) = delete;
-
-		/** Copy assignment is not allowed. */
-		DiagonalMatrix& operator =(const DiagonalMatrix& copyee) = delete;
 #endif
 
 		/**

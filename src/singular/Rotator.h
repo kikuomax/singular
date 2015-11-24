@@ -2,6 +2,7 @@
 #define _SINGULAR_ROTATOR_H
 
 #include "singular/Matrix.h"
+#include "singular/singular.h"
 
 #include <algorithm>
 #include <cassert>

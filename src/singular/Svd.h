@@ -5,6 +5,7 @@
 #include "singular/Matrix.h"
 #include "singular/Reflector.h"
 #include "singular/Rotator.h"
+#include "singular/singular.h"
 
 #include <algorithm>
 #include <cassert>
@@ -208,18 +209,17 @@ namespace singular {
 			 *     stolen.
 			 *     No longer valid after this call.
 			 */
-#if defined(_MSC_VER) && _MSC_VER < 1700
-			// Visual Studio 2010 does not have rvalue references
-			inline BidiagonalMatrix(const BidiagonalMatrix& copyee)
-				: pBlock(copyee.pBlock)
-			{
-				const_cast< BidiagonalMatrix& >(copyee).pBlock = nullptr;
-			}
-#else
+#if SINGULAR_RVALUE_REFERENCE_SUPPORTED
 			inline BidiagonalMatrix(BidiagonalMatrix&& copyee)
 				: pBlock(copyee.pBlock)
 			{
 				copyee.pBlock = nullptr;
+			}
+#else
+			inline BidiagonalMatrix(const BidiagonalMatrix& copyee)
+				: pBlock(copyee.pBlock)
+			{
+				const_cast< BidiagonalMatrix& >(copyee).pBlock = nullptr;
 			}
 #endif
 
@@ -458,23 +458,18 @@ namespace singular {
 				return newBulge;
 			}
 		private:
-#if defined(_MSC_VER) && _MSC_VER < 1800
-#if _MSC_VER >= 1700
-			// Visual Studio 2012 does not like "delete" stuff
-			// but supports rvalue references
-
-			/** Simple copy is forbidden. */
-			BidiagonalMatrix(const BidiagonalMatrix& copyee) {}
-
-			/** Simple assignment is forbidden. */
-			void operator =(const BidiagonalMatrix& copyee) {}
-#endif
-#else
+#if SINGULAR_FUNCTION_DELETION_SUPPORTED
 			/** Simple copy is forbidden. */
 			BidiagonalMatrix(const BidiagonalMatrix& copyee) = delete;
 
 			/** Simple assignment is forbidden. */
 			void operator =(const BidiagonalMatrix& copyee) = delete;
+#elif SINGULAR_RVALUE_REFERENCE_SUPPORTED
+			/** Simple copy is forbidden. */
+			BidiagonalMatrix(const BidiagonalMatrix& copyee) {}
+
+			/** Simple assignment is forbidden. */
+			void operator =(const BidiagonalMatrix& copyee) {}
 #endif
 
 			/** Releases the memory block for bidiagonal elements. */

@@ -4,4 +4,26 @@
 /** The version of the singular library. */
 #define SINGULAR_VERSION  "@PROJECT_VERSION@"
 
+/**
+ * Whether rvalue references are supported.
+ *
+ * Visual Studio 2010 and lower do not have rvalue references so far.
+ */
+#if defined(_MSC_VER) && _MSC_VER < 1700
+#define SINGULAR_RVALUE_REFERENCE_SUPPORTED	0
+#else
+#define SINGULAR_RVALUE_REFERENCE_SUPPORTED	1
+#endif
+
+/**
+ * Whether function deletions are supported.
+ *
+ * Visual Studio 2012 and lower do not like "delete" stuff so far.
+ */
+#if defined(_MSC_VER) && _MSC_VER < 1800
+#define SINGULAR_FUNCTION_DELETION_SUPPORTED	0
+#else
+#define SINGULAR_FUNCTION_DELETION_SUPPORTED	1
+#endif
+
 #endif

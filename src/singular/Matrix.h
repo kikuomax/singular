@@ -1,6 +1,7 @@
 #ifndef _SINGULAR_MATRIX_H
 #define _SINGULAR_MATRIX_H
 
+#include "singular/singular.h"
 #include "singular/Vector.h"
 
 #include <algorithm>
@@ -29,7 +30,8 @@ namespace singular {
 		double* pBlock;
 
 #if defined(_MSC_VER) && _MSC_VER < 1800
-		// every Matrix is a friend
+		// every Matrix should be a friend because Visual Studio 2012 and lower
+		// cannot use some friend functions
 		friend class Matrix;
 #else
 		// transposed Matrix is a friend
@@ -49,14 +51,13 @@ namespace singular {
 		 *     Matrix from which the memory block is to be stolen.
 		 *     No longer valid after this call.
 		 */
-#if defined(_MSC_VER) && _MSC_VER < 1700
-		Matrix(const Matrix& copyee) : pBlock(copyee.pBlock) {
-			// Visual Studio 2010 does not support rvalue references
-			const_cast< Matrix& >(copyee).pBlock = 0;
-		}
-#else
+#if SINGULAR_RVALUE_REFERENCE_SUPPORTED
 		Matrix(Matrix&& copyee) : pBlock(copyee.pBlock) {
 			copyee.pBlock = 0;
+		}
+#else
+		Matrix(const Matrix& copyee) : pBlock(copyee.pBlock) {
+			const_cast< Matrix& >(copyee).pBlock = 0;
 		}
 #endif
 
@@ -74,17 +75,17 @@ namespace singular {
 		 * @return
 		 *     Reference to this matrix.
 		 */
-#if defined(_MSC_VER) && _MSC_VER < 1700
-		Matrix& operator =(const Matrix& copyee) {
-#else
+#if SINGULAR_RVALUE_REFERENCE_SUPPORTED
 		Matrix& operator =(Matrix&& copyee) {
+#else
+		Matrix& operator =(const Matrix& copyee) {
 #endif
 			this->release();
 			this->pBlock = copyee.pBlock;
-#if defined(_MSC_VER) && _MSC_VER < 1700
-			const_cast< Matrix& >(copyee).pBlock = 0;
-#else
+#if SINGULAR_RVALUE_REFERENCE_SUPPORTED
 			copyee.pBlock = 0;
+#else
+			const_cast< Matrix& >(copyee).pBlock = 0;
 #endif
 			return *this;
 		}
@@ -518,11 +519,13 @@ namespace singular {
 		 */
 		Matrix(double* pBlock) : pBlock(pBlock) {}
 
-#if defined(_MSC_VER) && _MSC_VER < 1800
-#if _MSC_VER >= 1700
-		// Visual Studio 2012 does not like "delete" stuff
-		// but supports rvalue references
+#if SINGULAR_FUNCTION_DELETION_SUPPORTED
+		/** Simple copy is not allowed. */
+		Matrix(const Matrix& copyee) = delete;
 
+		/** Simple copy is not allowed. */
+		Matrix& operator =(const Matrix& copyee) = delete;
+#elif SINGULAR_RVALUE_REFERENCE_SUPPORTED
 		/** Simple copy is not allowed. */
 		Matrix(const Matrix& copyee) {}
 
@@ -530,13 +533,6 @@ namespace singular {
 		Matrix& operator =(const Matrix& copyee) {
 			return *this;
 		}
-#endif
-#else
-		/** Simple copy is not allowed. */
-		Matrix(const Matrix& copyee) = delete;
-
-		/** Simple copy is not allowed. */
-		Matrix& operator =(const Matrix& copyee) = delete;
 #endif
 
 		/**
