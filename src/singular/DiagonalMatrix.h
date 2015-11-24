@@ -60,9 +60,16 @@ namespace singular {
 		 *     Diagonal matrix from which the memory block is to be stolen.
 		 *     No loger valid after this call.
 		 */
+#if defined(_MSC_VER) && _MSC_VER < 1700
+		// Visual Studio 2010 does not have rvalue references
+		DiagonalMatrix(const DiagonalMatrix& copyee) : pBlock(copyee.pBlock) {
+			const_cast< DiagonalMatrix& >(copyee).pBlock = nullptr;
+		}
+#else
 		DiagonalMatrix(DiagonalMatrix&& copyee) : pBlock(copyee.pBlock) {
 			copyee.pBlock = nullptr;
 		}
+#endif
 
 		/** Releases the memory block of this diagonal matrix. */
 		~DiagonalMatrix() {
@@ -78,10 +85,18 @@ namespace singular {
 		 * @return
 		 *     Reference to this diagonal matrix.
 		 */
+#if defined(_MSC_VER) && _MSC_VER < 1700
+		DiagonalMatrix& operator =(const DiagonalMatrix& copyee) {
+#else
 		DiagonalMatrix& operator =(DiagonalMatrix&& copyee) {
+#endif
 			this->release();
 			this->pBlock = copyee.pBlock;
+#if defined(_MSC_VER) && _MSC_VER < 1700
+			const_cast< DiagonalMatrix& >(copyee).pBlock = nullptr;
+#else
 			copyee.pBlock = nullptr;
+#endif
 			return *this;
 		}
 
@@ -121,6 +136,10 @@ namespace singular {
 		}
 	private:
 #if defined(_MSC_VER) && _MSC_VER < 1800
+#if _MSC_VER >= 1700
+		// Visual Studio 2012 does not like "delete" stuff
+		// but supports rvalue references
+
 		/** Copy constructor is not allowed. */
 		DiagonalMatrix(const DiagonalMatrix& copyee) {}
 
@@ -128,6 +147,7 @@ namespace singular {
 		DiagonalMatrix& operator =(const DiagonalMatrix& copyee) {
 			return *this;
 		}
+#endif
 #else
 		/** Copy constructor is not allowed. */
 		DiagonalMatrix(const DiagonalMatrix& copyee) = delete;

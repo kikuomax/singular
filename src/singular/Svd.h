@@ -208,11 +208,20 @@ namespace singular {
 			 *     stolen.
 			 *     No longer valid after this call.
 			 */
+#if defined(_MSC_VER) && _MSC_VER < 1700
+			// Visual Studio 2010 does not have rvalue references
+			inline BidiagonalMatrix(const BidiagonalMatrix& copyee)
+				: pBlock(copyee.pBlock)
+			{
+				const_cast< BidiagonalMatrix& >(copyee).pBlock = nullptr;
+			}
+#else
 			inline BidiagonalMatrix(BidiagonalMatrix&& copyee)
 				: pBlock(copyee.pBlock)
 			{
 				copyee.pBlock = nullptr;
 			}
+#endif
 
 			/** Releases the memory block for bidiagonal elements. */
 			inline ~BidiagonalMatrix() {
@@ -450,11 +459,16 @@ namespace singular {
 			}
 		private:
 #if defined(_MSC_VER) && _MSC_VER < 1800
+#if _MSC_VER >= 1700
+			// Visual Studio 2012 does not like "delete" stuff
+			// but supports rvalue references
+
 			/** Simple copy is forbidden. */
 			BidiagonalMatrix(const BidiagonalMatrix& copyee) {}
 
 			/** Simple assignment is forbidden. */
 			void operator =(const BidiagonalMatrix& copyee) {}
+#endif
 #else
 			/** Simple copy is forbidden. */
 			BidiagonalMatrix(const BidiagonalMatrix& copyee) = delete;

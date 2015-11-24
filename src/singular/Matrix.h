@@ -49,9 +49,16 @@ namespace singular {
 		 *     Matrix from which the memory block is to be stolen.
 		 *     No longer valid after this call.
 		 */
+#if defined(_MSC_VER) && _MSC_VER < 1700
+		Matrix(const Matrix& copyee) : pBlock(copyee.pBlock) {
+			// Visual Studio 2010 does not support rvalue references
+			const_cast< Matrix& >(copyee).pBlock = 0;
+		}
+#else
 		Matrix(Matrix&& copyee) : pBlock(copyee.pBlock) {
 			copyee.pBlock = 0;
 		}
+#endif
 
 		/** Releases the allocated block. */
 		~Matrix() {
@@ -67,10 +74,18 @@ namespace singular {
 		 * @return
 		 *     Reference to this matrix.
 		 */
+#if defined(_MSC_VER) && _MSC_VER < 1700
+		Matrix& operator =(const Matrix& copyee) {
+#else
 		Matrix& operator =(Matrix&& copyee) {
+#endif
 			this->release();
 			this->pBlock = copyee.pBlock;
+#if defined(_MSC_VER) && _MSC_VER < 1700
+			const_cast< Matrix& >(copyee).pBlock = 0;
+#else
 			copyee.pBlock = 0;
+#endif
 			return *this;
 		}
 
@@ -504,6 +519,10 @@ namespace singular {
 		Matrix(double* pBlock) : pBlock(pBlock) {}
 
 #if defined(_MSC_VER) && _MSC_VER < 1800
+#if _MSC_VER >= 1700
+		// Visual Studio 2012 does not like "delete" stuff
+		// but supports rvalue references
+
 		/** Simple copy is not allowed. */
 		Matrix(const Matrix& copyee) {}
 
@@ -511,6 +530,7 @@ namespace singular {
 		Matrix& operator =(const Matrix& copyee) {
 			return *this;
 		}
+#endif
 #else
 		/** Simple copy is not allowed. */
 		Matrix(const Matrix& copyee) = delete;
