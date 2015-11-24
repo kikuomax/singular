@@ -134,11 +134,11 @@ namespace singular {
 			}
 			if (sortNeeded) {
 				// shuffles the N (<= M) singular values
-				std::sort(shuffle, shuffle + N, [ss](int i, int j) {
+				std::sort(shuffle, shuffle + N, [&ss](int i, int j) {
 					return ss[i] > ss[j];  // descending order
 				});
 				double ss2[M];
-				std::transform(shuffle, shuffle + N, ss2, [ss](int i) {
+				std::transform(shuffle, shuffle + N, ss2, [&ss](int i) {
 					return ss[i];
 				});
 				return std::make_tuple(u.shuffleColumns(shuffle),

@@ -45,7 +45,7 @@ TEST(VectorTest, Const_Vector_can_be_associated_with_a_simple_array) {
 
 TEST(VectorTest, Vector_can_be_associated_with_an_empty_array) {
 	// empty data
-	double data[0];
+	double data[1];  // data[0] is not allowed
 	const size_t N = 0;
 	singular::Vector< double > v(data, N, 1);
 	// checks the size

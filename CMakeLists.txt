@@ -22,6 +22,9 @@ if (MSVC AND MSVC_LINK_STATIC_RUNTIME)
 		  string (REGEX REPLACE "/MD" "/MT" ${flag_var} "${${flag_var}}")
 	   endif ()
 	endforeach ()
+
+	# finds googletest built for the static runtime
+	set (GTEST_MSVC_SEARCH "MT")
 endif ()
 
 # enables C++11 on GCC like compilers
@@ -68,7 +71,7 @@ if (GENERATE_TESTS)
 
 	target_link_libraries (singular-test ${GTEST_BOTH_LIBRARIES})
 
-	add_test (NAME singular-test COMMAND singular-test)
+	add_test (singular-test-all singular-test)
 endif ()
 
 # generates documentation if necessary
