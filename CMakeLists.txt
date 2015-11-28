@@ -4,7 +4,7 @@ project (singular)
 
 set (PROJECT_MAJOR 0)
 set (PROJECT_MINOR 1)
-set (PROJECT_PATCH 0)
+set (PROJECT_PATCH 1)
 set (PROJECT_VERSION "${PROJECT_MAJOR}.${PROJECT_MINOR}.${PROJECT_PATCH}")
 
 # turn off if you want to dynamically link the MSVC runtime
@@ -36,14 +36,14 @@ endif ()
 find_package (GTest)
 
 # turn on if you want to generate tests
-# turned on by default as far as GTest is found
+# turned on by default as long as GTest is found
 option (GENERATE_TESTS "Generate Google Test tests" ${GTEST_FOUND})
 
 # finds doxygen
 find_package (Doxygen)
 
 # turn on if you want to generate documentation
-# turned on by default as far as Doxygen is found
+# turned on by default as long as Doxygen is found
 option (GENERATE_DOCUMENTATION
 	"Generate Doxygen documentation" ${DOXYGEN_FOUND})
 

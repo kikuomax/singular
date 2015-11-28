@@ -19,28 +19,37 @@ The [CMake script](/CMakeLists.txt) does everything you need to install *singula
 
 Please take the following steps,
 
- 1. Clone the repository anywhere you like and move down to it,
+ 1. Clone the repository anywhere you like and move down to it.
 
 	```shell
 	git clone https://github.com/kikuomax/singular.git
 	cd singular
 	```
 
- 2. Configure the project.
+ 2. Create a `build` directory and move down to it.
+
+	```shell
+	mkdir build
+	cd build
+	```
+
+ 3. Configure the project.
     Suppose you want to install *singular* into the directory `install-path`.
 
 	```shell
 	cmake -DCMAKE_INSTALL_PREFIX=install-path ..
 	```
 
- 3. Install headers.
+ 4. Install headers.
 
     ```shell
 	cmake --build . --target install
 	```
 
- 4. You will find the headers in the following directory,
+ 5. You will find the headers in the following directory,
      - `install-path/include/singular`
+
+Creation of the `build` directory (step 2) is not necessary, but it prevents this directory being messy.
 
 An [example program](/test/test.cpp) shows how to use *singular*.
 
