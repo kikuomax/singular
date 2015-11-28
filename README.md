@@ -1,5 +1,7 @@
 *singular* is a C++ library which provides functions and classes to perform [singular value decomposition (SVD)](https://en.wikipedia.org/wiki/Singular_value_decomposition).
 
+[![Build Status](https://travis-ci.org/kikuomax/singular.svg?branch=master)](https://travis-ci.org/kikuomax/singular)
+
 The goals of this reinvention are
  - Learning Francis's algorithm
  - Learning modern C++
