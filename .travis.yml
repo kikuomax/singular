@@ -11,13 +11,9 @@ install:
   - cmake --build .
   - mkdir lib
   - mv libgtest* lib
-  - export GTEST_ROOT=$PWD
+  - cd ..
 
-before_script:
-  - mkdir build
-  - cd build
-
-script: cmake .. && cmake --build . && ctest -V
+script: cmake -DGTEST_ROOT=$PWD/googletest . && cmake --build . && ctest -V
 
 os:
   - linux
