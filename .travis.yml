@@ -5,12 +5,12 @@ compiler:
   - clang
 
 install:
-  - git clone https://github.com/google/googletest.git
+  - git clone -b release-1.7.0 https://github.com/google/googletest.git
   - cd googletest
   - cmake .
   - cmake --build .
   - mkdir lib
-  - mv libg* lib
+  - mv libgtest* lib
   - export GTEST_ROOT=$PWD
 
 before_script:
