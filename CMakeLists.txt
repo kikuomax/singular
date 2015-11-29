@@ -4,7 +4,7 @@ project (singular)
 
 set (PROJECT_MAJOR 0)
 set (PROJECT_MINOR 1)
-set (PROJECT_PATCH 2-SNAPSHOT)
+set (PROJECT_PATCH 2)
 set (PROJECT_VERSION "${PROJECT_MAJOR}.${PROJECT_MINOR}.${PROJECT_PATCH}")
 
 # turn off if you want to dynamically link the MSVC runtime
@@ -32,6 +32,7 @@ if (CMAKE_COMPILER_IS_GNUCXX)
 	# checks the GCC version
 	#  - 4.7 or higher needs -std=c++11
 	#  - 4.6 or lower needs -std=c++0x
+	# http://stackoverflow.com/questions/4058565/check-gcc-minor-in-cmake
 	execute_process (
 		COMMAND ${CMAKE_CXX_COMPILER} -dumpversion
 		OUTPUT_VARIABLE GCC_VERSION)
