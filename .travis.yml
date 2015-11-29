@@ -4,10 +4,15 @@ compiler:
   - gcc
   - clang
 
+addons:
+  apt:
+    packages:
+	  - libgtest-dev
+
 install:
-  - git clone -b release-1.7.0 https://github.com/google/googletest.git
+  - mkdir googletest
   - cd googletest
-  - cmake .
+  - cmake /usr/src/gtest
   - cmake --build .
   - mkdir lib
   - mv libgtest* lib
