@@ -7,9 +7,10 @@ compiler:
 addons:
   apt:
     packages:
-	  - libgtest-dev
+      - libgtest-dev
 
 install:
+  - apt-get install libgtest-dev
   - mkdir googletest
   - cd googletest
   - cmake /usr/src/gtest
