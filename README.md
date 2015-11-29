@@ -65,6 +65,29 @@ You can run unittests by the following command after running the build step of *
 ctest -V
 ```
 
+pthread related errors
+----------------------
+
+With the following configuration, I got linker errors related to pthread.
+ - Ubuntu 14.04.3
+ - gcc 4.8.4
+ - googletest 1.7.0
+
+One solution is to add a `-pthread` compiler flag followed by other objects and libraries.
+[This conversation](https://github.com/google/googletest/issues/391) may help you.
+You can specify the `-pthread` flag at the configuration step like,
+
+```shell
+cmake -DCMAKE_CXX_FLAGS=-pthread ..
+```
+
+Another solution is to compile googletest without pthread.
+This can be done by turning on the `gtest_disable_pthreads` option at the configuration of **googletest**.
+
+```shell
+cmake -Dgtest_disable_pthreads=on .
+```
+
 Generating documentation
 ========================
 

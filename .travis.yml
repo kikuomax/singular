@@ -4,15 +4,10 @@ compiler:
   - gcc
   - clang
 
-addons:
-  apt:
-    packages:
-      - libgtest-dev
-
 install:
-  - mkdir googletest
+  - git clone -b release-1.7.0 https://github.com/google/googletest.git
   - cd googletest
-  - cmake /usr/src/gtest
+  - cmake -Dgtest_disable_pthreads=on .
   - cmake --build .
   - mkdir lib
   - mv libgtest* lib
