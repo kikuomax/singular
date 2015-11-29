@@ -4,7 +4,16 @@ compiler:
   - gcc
   - clang
 
-script: cmake . && make && ctest -V
+before_install:
+  - sudo apt-get update
+  - sudo apt-get install libgtest-dev
+  - "cd /usr/src/gtest && sudo cmake . && sudo cmake --build . && sudo mv libg* /usr/local/lib/ ; cd -"
+
+before_script:
+  - mkdir build
+  - cd build
+
+script: cmake .. && cmake --build . && ctest -V
 
 os:
   - linux
