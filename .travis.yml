@@ -10,7 +10,6 @@ addons:
       - libgtest-dev
 
 install:
-  - apt-get install libgtest-dev
   - mkdir googletest
   - cd googletest
   - cmake /usr/src/gtest
