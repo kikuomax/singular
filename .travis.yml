@@ -4,10 +4,14 @@ compiler:
   - gcc
   - clang
 
-before_install:
-  - sudo apt-get update
-  - sudo apt-get install libgtest-dev
-  - "cd /usr/src/gtest && sudo cmake . && sudo cmake --build . && sudo mv libg* /usr/local/lib/ ; cd -"
+install:
+  - git clone https://github.com/google/googletest.git
+  - cd googletest
+  - cmake .
+  - cmake --build .
+  - mkdir lib
+  - mv libg* lib
+  - export GTEST_ROOT=$PWD
 
 before_script:
   - mkdir build
