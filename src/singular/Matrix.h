@@ -29,13 +29,14 @@ namespace singular {
 		 */
 		double* pBlock;
 
-#if defined(_MSC_VER) && _MSC_VER < 1800
-		// every Matrix should be a friend because Visual Studio 2012 and lower
-		// cannot use some friend functions
-		friend class Matrix;
-#else
+#if SINGULAR_TEMPLATE_FRIEND_OPERATOR_OVERLOADING_SUPPORTED
 		// transposed Matrix is a friend
 		friend class Matrix< N, M >;
+#else
+		// every Matrix should be a friend
+		// because some workarounds need private members
+		template < int, int >
+		friend class Matrix;
 #endif
 	public:
 		/** Initializes a matrix filled with zeros. */
@@ -253,7 +254,27 @@ namespace singular {
 		friend Matrix< M2, L > operator *(const Matrix< M2, N2 >& lhs,
 										  const Matrix< N2, L >& rhs);
 
-#if defined(_MSC_VER) && _MSC_VER < 1800
+#if SINGULAR_TEMPLATE_FRIEND_OPERATOR_OVERLOADING_SUPPORTED
+		// Defined outside
+		template <
+			int M2, int N2, int L, template < int, int > class MatrixLike >
+		friend Matrix< M2, L > operator *(const Matrix< M2, N2 >& lhs,
+										  const MatrixLike< N2, L >& rhs);
+
+		// Defined outside
+		template <
+			int M2, int N2, int L, template < int, int > class MatrixLike >
+		friend Matrix< M2, L > operator *(const MatrixLike< M2, N2 >& lhs,
+										  const Matrix< N2, L >& rhs);
+
+		// Defined outside
+		template <
+			int M2, int N2, int L,
+			template < int, int > class MatrixLike1,
+			template < int, int > class MatrixLike2 >
+		friend Matrix< M2, L > operator *(const MatrixLike1< M2, N2 >& lhs,
+										  const MatrixLike2< N2, L >& rhs);
+#else
 		// Visual Studio 2012 does not like a friend function has templates
 		// in its type parameters
 
@@ -399,26 +420,6 @@ namespace singular {
 			}
 			return Matrix< M2, L >(pBlock);
 		}
-#else
-		// Defined outside
-		template <
-			int M2, int N2, int L, template < int, int > class MatrixLike >
-		friend Matrix< M2, L > operator *(const Matrix< M2, N2 >& lhs,
-										  const MatrixLike< N2, L >& rhs);
-
-		// Defined outside
-		template <
-			int M2, int N2, int L, template < int, int > class MatrixLike >
-		friend Matrix< M2, L > operator *(const MatrixLike< M2, N2 >& lhs,
-										  const Matrix< N2, L >& rhs);
-
-		// Defined outside
-		template <
-			int M2, int N2, int L,
-			template < int, int > class MatrixLike1,
-			template < int, int > class MatrixLike2 >
-		friend Matrix< M2, L > operator *(const MatrixLike1< M2, N2 >& lhs,
-										  const MatrixLike2< N2, L >& rhs);
 #endif
 
 		/**
@@ -615,9 +616,7 @@ namespace singular {
 	Matrix< M, L > operator *(const Matrix< M, N >& lhs,
 							  const MatrixLike< N, L >& rhs)
 	{
-#if defined(_MSC_VER) && _MSC_VER < 1800
-		return Matrix< M, N >::multiply(lhs, rhs);
-#else
+#if SINGULAR_TEMPLATE_FRIEND_OPERATOR_OVERLOADING_SUPPORTED
 		double* pBlock = new double[M * L];
 		double* pDst = pBlock;
 		for (int i = 0; i < M; ++i) {
@@ -633,6 +632,8 @@ namespace singular {
 			}
 		}
 		return Matrix< M, L >(pBlock);
+#else
+		return Matrix< M, N >::multiply(lhs, rhs);
 #endif
 	}
 
@@ -665,9 +666,7 @@ namespace singular {
 	Matrix< M, L > operator *(const MatrixLike< M, N >& lhs,
 							  const Matrix< N, L >& rhs)
 	{
-#if defined(_MSC_VER) && _MSC_VER < 1800
-		return Matrix< M, L >::multiply(lhs, rhs);
-#else
+#if SINGULAR_TEMPLATE_FRIEND_OPERATOR_OVERLOADING_SUPPORTED
 		double* pBlock = new double[M * L];
 		double* pDst = pBlock;
 		for (int i = 0; i < M; ++i) {
@@ -683,6 +682,8 @@ namespace singular {
 			}
 		}
 		return Matrix< M, L >(pBlock);
+#else
+		return Matrix< M, L >::multiply(lhs, rhs);
 #endif
 	}
 
@@ -720,9 +721,7 @@ namespace singular {
 	Matrix< M, L > operator *(const MatrixLike1< M, N >& lhs,
 							  const MatrixLike2< N, L >& rhs)
 	{
-#if defined(_MSC_VER) && _MSC_VER < 1800
-		return Matrix< M, L >::multiply(lhs, rhs);
-#else
+#if SINGULAR_TEMPLATE_FRIEND_OPERATOR_OVERLOADING_SUPPORTED
 		double* pBlock = new double[M * L];
 		double* pDst = pBlock;
 		for (int i = 0; i < M; ++i) {
@@ -736,6 +735,8 @@ namespace singular {
 			}
 		}
 		return Matrix< M, L >(pBlock);
+#else
+		return Matrix< M, L >::multiply(lhs, rhs);
 #endif
 	}
 
