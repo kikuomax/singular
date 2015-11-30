@@ -70,6 +70,11 @@ include_directories (
 
 add_executable (svd-test test/test.cpp)
 
+add_executable (benchmark test/benchmark.cpp)
+
+target_include_directories (benchmark
+	PUBLIC /Users/kikuo/Documents/libs/eigen/include/eigen3)
+
 # generates tests if necessary
 if (GENERATE_TESTS)
 	enable_testing ()
