@@ -33,7 +33,7 @@
  * operators.
  * Neither does GCC.
  */
-#if (defined(_MSC_VER) && _MSC_VER < 1800) || defined(__GNUC__)
+#if (defined(_MSC_VER) && _MSC_VER < 1800) || (defined(__GNUC__) && !defined(__clang__))
 #define SINGULAR_TEMPLATE_FRIEND_OPERATOR_OVERLOADING_SUPPORTED	0
 #else
 #define SINGULAR_TEMPLATE_FRIEND_OPERATOR_OVERLOADING_SUPPORTED	1

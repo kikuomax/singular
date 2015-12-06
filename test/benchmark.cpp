@@ -288,8 +288,16 @@ struct Benchmark {
 /** Stopwatch to evaluate an algorithm. */
 class Stopwatch {
 private:
+	/** Clock type used to measure elapsed time. */
+#if defined(__GNUC__) && !defined(__clang__) && __GNUC__ == 4 && __GNUC_MINOR__ < 7
+	// GCC prior to 4.7 does not have steady_clock
+	typedef std::chrono::monotonic_clock ClockType;
+#else
+	typedef std::chrono::steady_clock ClockType;
+#endif
+
 	/** Time point when this stopwatch has started. */
-	std::chrono::steady_clock::time_point sT;
+	ClockType::time_point sT;
 
 	/** Measured lap times. */
 	std::vector< double > lapTimes;
@@ -336,7 +344,7 @@ private:
 	 * has last started.
 	 */
 	void stop() {
-		std::chrono::steady_clock::time_point eT = std::chrono::steady_clock::now();
+		ClockType::time_point eT = ClockType::now();
 		std::chrono::duration< double > elapsed =
 			std::chrono::duration_cast< std::chrono::duration< double > >(eT - this->sT);
 		this->lapTimes.push_back(elapsed.count());

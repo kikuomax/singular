@@ -101,9 +101,9 @@ if (ARMADILLO_ROOT)
 		target_include_directories (benchmark
 			PUBLIC ${ARMADILLO_ROOT}/include)
 		target_link_libraries (benchmark
-			${BLAS_LIBRARIES}
+			${ARMADILLO_LIB}
 			${LAPACK_LIBRARIES}
-			${ARMADILLO_LIB})
+			${BLAS_LIBRARIES})
 		set (BENCHMARK_COMPILE_FLAGS
 			"${BENCHMARK_COMPILE_FLAGS} -DENABLE_ARMADILLO")
 	else ()
