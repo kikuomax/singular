@@ -4,7 +4,7 @@ project (singular)
 
 set (PROJECT_MAJOR 0)
 set (PROJECT_MINOR 1)
-set (PROJECT_PATCH 2)
+set (PROJECT_PATCH 3-SNAPSHOT)
 set (PROJECT_VERSION "${PROJECT_MAJOR}.${PROJECT_MINOR}.${PROJECT_PATCH}")
 
 # turn off if you want to dynamically link the MSVC runtime
@@ -70,10 +70,60 @@ include_directories (
 
 add_executable (svd-test test/test.cpp)
 
+# benchmark
 add_executable (benchmark test/benchmark.cpp)
 
-target_include_directories (benchmark
-	PUBLIC /Users/kikuo/Documents/libs/eigen/include/eigen3)
+# additional compiler flags for benchmark
+set (BENCHMARK_COMPILE_FLAGS "")
+
+# enables benchmarks on Eigen if EIGEN_INCLUDE is set
+if (EIGEN_INCLUDE)
+	target_include_directories (benchmark
+		PUBLIC ${EIGEN_INCLUDE})
+	set (BENCHMARK_COMPILE_FLAGS "${BENCHMARK_COMPILE_FLAGS} -DENABLE_EIGEN")
+endif ()
+
+# enables benchmarks on Armadillo if ARMADILLO_ROOT is set
+if (ARMADILLO_ROOT)
+	# locates the Armadillo, LAPACK and BLAS libraries
+	find_library (ARMADILLO_LIB armadillo HINTS ${ARMADILLO_ROOT}/lib)
+	if (APPLE)
+		# uses Accelerate framework on Apple products
+		set (LAPACK_FOUND true)
+		set (BLAS_FOUND true)
+		set (LAPACK_LIBRARIES "-framework Accelerate")
+		set (BLAS_LIBRARIES "")
+	else ()
+		find_package (LAPACK)
+		find_package (BLAS)
+	endif ()
+	if (ARMADILLO_LIB AND LAPACK_FOUND AND BLAS_FOUND)
+		target_include_directories (benchmark
+			PUBLIC ${ARMADILLO_ROOT}/include)
+		target_link_libraries (benchmark
+			${BLAS_LIBRARIES}
+			${LAPACK_LIBRARIES}
+			${ARMADILLO_LIB})
+		set (BENCHMARK_COMPILE_FLAGS
+			"${BENCHMARK_COMPILE_FLAGS} -DENABLE_ARMADILLO")
+	else ()
+		if (NOT ARMADILLO_LIB_FOUND)
+			message (WARNING
+				"no Armadillo library found in ${ARMADILLO_ROOT}/lib")
+		endif ()
+		if (NOT LAPACK_FOUND)
+			message (WARNING "no LAPACK found")
+		endif ()
+		if (NOT BLAS_FOUND)
+			message (WARNING "no BLAS found")
+		endif ()
+	endif ()
+endif ()
+
+if (BENCHMARK_COMPILE_FLAGS)
+	set_target_properties (benchmark
+		PROPERTIES COMPILE_FLAGS ${BENCHMARK_COMPILE_FLAGS})
+endif ()
 
 # generates tests if necessary
 if (GENERATE_TESTS)

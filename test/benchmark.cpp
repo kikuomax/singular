@@ -1,5 +1,12 @@
-#include "Eigen/SVD"
 #include "singular/Svd.h"
+
+#ifdef ENABLE_ARMADILLO
+#include "armadillo"
+#endif
+
+#ifdef ENABLE_EIGEN
+#include "Eigen/SVD"
+#endif
 
 #include <algorithm>
 #include <chrono>
@@ -11,89 +18,532 @@
 static const int M = 60;
 
 /** Number of columns in an input matrix. */
-static const int N = 15;
+static const int N = 50;
+
+/** Minimum element value. */
+static const double MIN_VALUE = -10;
+
+/** Maximum element value. */
+static const double MAX_VALUE = 10;
 
 /** Default number of iterations. */
-static const int DEFAULT_ITERATION_COUNT = 1000;
+static const int DEFAULT_ITERATION_COUNT = 100;
 
 /** Allowed error ratio. */
-static const double ROUNDED_ERROR = 1.0e-8;
+static const double ROUNDED_ERROR = 1.0e-12;
 
-/** Matrix type for Eigen. */
-typedef Eigen::Matrix< double, M, N > EigenMatrix;
+/** SVD configuration for singular. */
+struct SingularSvd {
+	/** Input matrix type. */
+	typedef singular::Matrix< M, N > Matrix;
 
-/** SVD type for Eigen. */
-typedef Eigen::JacobiSVD< EigenMatrix > EigenSVD;
+	/** Type for left-singular vectors. */
+	typedef singular::Matrix< M, M > UMatrix;
+
+	/** Type for singular values. */
+	typedef singular::DiagonalMatrix< M, N > SMatrix;
+
+	/** Type for right-singular vectors. */
+	typedef singular::Matrix< N, N > VMatrix;
+
+	/** Results of SVD. */
+	singular::Svd< M, N >::USV usv;
+
+	/**
+	 * Performs singular value decomposition over given elements.
+	 *
+	 * @param elements
+	 *     Elements of the M x N matrix to be decomposed.
+	 */
+	void operator ()(const double elements[]) {
+		// initializes the matrix
+		singular::Matrix< M, N > m;
+		for (int i = 0; i < M; ++i) {
+			for (int j = 0; j < N; ++j) {
+				m(i, j) = elements[i * N + j];
+			}
+		}
+		// does decomposition
+		singular::Svd< M, N > svd;
+		this->usv = svd.decomposeUSV(m);
+	}
+
+	/** Returns the last computed left-singular matrix. */
+	inline const UMatrix& getU() const {
+		return singular::Svd< M, N >::getU(this->usv);
+	}
+
+	/** Returns the transposed last computed left-singular matrix. */
+	inline UMatrix getUT() const {
+		return singular::Svd< M, N >::getU(this->usv).transpose();
+	}
+
+	/** Returns the last computed singular values. */
+	inline SMatrix getS() const {
+		return singular::Svd< M, N >::getS(this->usv).clone();
+	}
+
+	/** Returns the last computed right-singular vectors. */
+	inline const VMatrix& getV() const {
+		return singular::Svd< M, N >::getV(this->usv);
+	}
+
+	/** Returns the transposed last computed right-singular vectors. */
+	inline VMatrix getVT() const {
+		return singular::Svd< M, N >::getV(this->usv).transpose();
+	}
+};
+
+#ifdef ENABLE_EIGEN
+/** SVD configuration for Eigen. */
+struct EigenSvd {
+	/** Input matrix type. */
+	typedef Eigen::Matrix< double, M, N > Matrix;
+
+	/** Type for left-singular vectors. */
+	typedef Eigen::JacobiSVD< Matrix >::MatrixUType UMatrix;
+
+	/** Type for singular values. */
+	typedef Matrix SMatrix;
+
+	/** Type for right-singular vectors. */
+	typedef Eigen::JacobiSVD< Matrix >::MatrixVType VMatrix;
+
+	/** Results of SVD. */
+	Eigen::JacobiSVD< Matrix > svd;
+
+	/**
+	 * Performs singular value decomposition over given elements.
+	 *
+	 * @param elements
+	 *     Elements of the M x N matrix to be decomposed.
+	 */
+	void operator ()(const double elements[]) {
+		// initializes the matrix
+		Matrix m;
+		for (int i = 0; i < M; ++i) {
+			for (int j = 0; j < N; ++j) {
+				m(i, j) = elements[i * N + j];
+			}
+		}
+		// does decomposition
+		this->svd.compute(m, Eigen::ComputeFullU | Eigen::ComputeFullV);
+	}
+
+	/** Returns the last computed left-singular vectors. */
+	inline const UMatrix& getU() const {
+		return this->svd.matrixU();
+	}
+
+	/** Returns the transposed last computed left-singular vectors. */
+	inline UMatrix getUT() const {
+		return this->svd.matrixU().transpose();
+	}
+
+	/**
+	 * Returns the last computed singular values.
+	 * Converts singular value vector into an M x N diagonal matrix.
+	 */
+	SMatrix getS() const {
+		const Eigen::JacobiSVD< Matrix >::SingularValuesType& ss =
+			this->svd.singularValues();
+		SMatrix sm;
+		sm.setZero();
+		for (int i = 0; i < std::min(M, N); ++i) {
+			sm(i, i) = ss(i);
+		}
+		return sm;
+	}
+
+	/** Returns the last computed right-singular vectors. */
+	inline const VMatrix& getV() const {
+		return this->svd.matrixV();
+	}
+
+	/** Returns the transposed last computed right-singular vectors. */
+	inline VMatrix getVT() const {
+		return this->svd.matrixV().transpose();
+	}
+};
+#endif
+
+#ifdef ENABLE_ARMADILLO
+/** SVD configuration for Armadillo. */
+struct ArmadilloSvd {
+	/** Input matrix type. */
+	typedef arma::mat Matrix;
+
+	/** Type for left-singular vectors. */
+	typedef arma::mat UMatrix;
+
+	/** Type for singular values. */
+	typedef arma::mat SMatrix;
+
+	/** Type for right-singular vectors. */
+	typedef arma::mat VMatrix;
+
+	/** Stores left-singular vectors. */
+	UMatrix u;
+
+	/** Stores singular values. */
+	arma::vec s;
+
+	/** Stores right-singular vectors. */
+	VMatrix v;
+
+	/**
+	 * Performs singular value decomposition over given elements.
+	 *
+	 * @param elements
+	 *     Elements of the M x N matrix to be decomposed.
+	 */
+	void operator ()(const double elements[]) {
+		// initializes the matrix
+		arma::mat m(M, N);
+		for (int i = 0; i < M; ++i) {
+			for (int j = 0; j < N; ++j) {
+				m(i, j) = elements[i * N + j];
+			}
+		}
+		// does decomposition
+		arma::svd(this->u, this->s, this->v, m);
+	}
+
+	/** Returns the last computed left-singular vectors. */
+	inline const UMatrix& getU() const {
+		return this->u;
+	}
+
+	/** Returns the transposed last computed left-singular vectors. */
+	inline UMatrix getUT() const {
+		return this->u.t();
+	}
+
+	/**
+	 * Returns the last computed singular values.
+	 * Converts singular value vector into M x N diagonal matrix.
+	 */
+	SMatrix getS() const {
+		SMatrix sm(M, N, arma::fill::zeros);
+		for (int i = 0; i < std::min(M, N); ++i) {
+			sm(i, i) = this->s(i);
+		}
+		return sm;
+	}
+
+	/** Returns the last computed right-singular vectors. */
+	inline const VMatrix& getV() const {
+		return this->v;
+	}
+
+	/** Returns the transposed last computed right-singular vectors. */
+	inline VMatrix getVT() const {
+		return this->v.t();
+	}
+};
+#endif
 
 /**
- * Runs Eigen's SVD over a matrix filled with given elements.
+ * A benchmark function for a given algorithm.
  *
- * @param elements
- *     Elements of the M x N matrix to be decomposed.
+ * @tparam Algorithm
+ *     Algorithm to be evaluated.
  */
-static void runEigenSvd(const double elements[]) {
-	// initializes the matrix
-	EigenMatrix m;
-	for (int i = 0; i < M; ++i) {
-		for (int j = 0; j < N; ++j) {
-			m(i, j) = elements[i * N + j];
+template < typename Algorithm >
+struct Benchmark {
+	/** Number of iterations. */
+	int numIterations;
+
+	/** Seed for the random number generator. */
+	int seed;
+
+	/**
+	 * Configures a benchmark.
+	 *
+	 * @param numIterations
+	 *     Number of iterations.
+	 * @param seed
+	 *     Seed for the random number generator.
+	 */
+	Benchmark(int numIterations, int seed)
+		: numIterations(numIterations), seed(seed) {}
+
+	/** Runs the given algorithm several times. */
+	void operator ()() const {
+		Algorithm algo;
+		double elements[M * N];
+		std::default_random_engine rnd(this->seed);
+		std::uniform_real_distribution< double > dist(MIN_VALUE, MAX_VALUE);
+		for (int n = 0; n < this->numIterations; ++n) {
+			// generates random elements
+			std::generate_n(elements, M * N, [&rnd, &dist]() {
+				return dist(rnd);
+			});
+			// runs the algorithm
+			algo(elements);
 		}
 	}
-	// does decomposition
-	EigenSVD svd(m, Eigen::ComputeFullU | Eigen::ComputeFullV);
-}
+};
+
+/** Stopwatch to evaluate an algorithm. */
+class Stopwatch {
+private:
+	/** Time point when this stopwatch has started. */
+	std::chrono::steady_clock::time_point sT;
+
+	/** Measured lap times. */
+	std::vector< double > lapTimes;
+public:
+	/** Initializes a stopwatch. */
+	Stopwatch() {
+		this->lapTimes.reserve(10);
+	}
+
+	/**
+	 * Measures the time to run a given function.
+	 *
+	 * @tparam Fn
+	 *     Type of the function to run.
+	 * @param fn
+	 *     Function or function like object to run.
+	 */
+	template < typename Fn >
+	void measure(Fn& fn) {
+		this->start();
+		fn();
+		this->stop();
+	}
+
+	/** Prints the statistics on the standard output. */
+	void printStatistics() const {
+		double sum = 0.0;
+		for (size_t i = 0; i < this->lapTimes.size(); ++i) {
+			std::cout << "lap time[" << i << "]: "
+				<< this->lapTimes[i] << " seconds" << std::endl;
+			sum += this->lapTimes[i];
+		}
+		std::cout << "mean lap time: "
+			<< (sum / this->lapTimes.size()) << " seconds" << std::endl;
+	}
+private:
+	/** Starts measuring time. */
+	void start() {
+		this->sT = std::chrono::steady_clock::now();
+	}
+
+	/**
+	 * Stops measuring time and records the elapsed time since this stopwatch
+	 * has last started.
+	 */
+	void stop() {
+		std::chrono::steady_clock::time_point eT = std::chrono::steady_clock::now();
+		std::chrono::duration< double > elapsed =
+			std::chrono::duration_cast< std::chrono::duration< double > >(eT - this->sT);
+		this->lapTimes.push_back(elapsed.count());
+	}
+};
 
 /**
- * Runs singular's SVD over a matrix filled with given elements.
+ * Verifier for a given SVD algorithm.
  *
- * @param elements
- *     Elements of the M x N matrix to be decomposed.
+ * @tparam Algorithm
+ *     SVD algorithm to be verified.
+ *     Must have a default constructor.
  */
-static void runSingularSvd(const double elements[]) {
-	// initializes the matrix
-	singular::Matrix< M, N > m;
-	for (int i = 0; i < M; ++i) {
-		for (int j = 0; j < N; ++j) {
-			m(i, j) = elements[i * N + j];
+template < typename Algorithm >
+class SvdVerifier {
+private:
+	/** Algorithm to be verified. */
+	Algorithm algo;
+
+	/** Number of verifications. */
+	int numVerifications;
+
+	/** Number of reconstruction errors. */
+	int numReconstructionErrors;
+
+	/** Sum of reconstruction errors. */
+	double reconstructionErrorSum;
+
+	/** Number of orthonormal test errors over left-singular vectors. */
+	int numOrthonormalUErrors;
+
+	/** Sum of orthonormal test errors over left-singular vectors. */
+	double orthonormalUErrorSum;
+
+	/** Number of orthonormal test errors over right-singular vectors. */
+	int numOrthonormalVErrors;
+
+	/** Sum of orthonormal test errors over right-singular vectors. */
+	double orthonormalVErrorSum;
+
+	/** Number of reference singular value discrepancies. */
+	int numSingularValueDiscrepancies;
+
+	/** Sum of singular value errors. */
+	double singularValueErrorSum;
+public:
+	/** Initializes. */
+	SvdVerifier()
+		: numVerifications(0),
+		  numReconstructionErrors(0),
+		  reconstructionErrorSum(0),
+		  numOrthonormalUErrors(0),
+		  orthonormalUErrorSum(0),
+		  numOrthonormalVErrors(0),
+		  orthonormalVErrorSum(0),
+		  numSingularValueDiscrepancies(0),
+		  singularValueErrorSum(0) {}
+
+	/** Returns the algorithm object being verified. */
+	inline Algorithm& getAlgorithm() {
+		return this->algo;
+	}
+
+	/**
+	 * Verifies the algorithm with given elements.
+	 *
+	 * @param elements
+	 *     Elements of the M x N matrix.
+	 */
+	void verify(const double elements[]) {
+		++this->numVerifications;
+		this->algo(elements);
+		// tests reconstruction A = USV*
+		{
+			double mx = *std::max_element(
+				elements, elements + M * N, [](double a, double b) {
+					return std::abs(a) < std::abs(b);
+				});
+			if (mx == 0.0) {
+				mx = 1.0;
+			}
+			typename Algorithm::Matrix a =
+				this->algo.getU() * this->algo.getS() * this->algo.getVT();
+			for (int i = 0; i < M; ++i) {
+				for (int j = 0; j < N; ++j) {
+					double ref = elements[i * N + j];
+					double e = std::abs(a(i, j) - ref);
+					this->reconstructionErrorSum += e;
+					if (e / mx >= ROUNDED_ERROR) {
+						++this->numReconstructionErrors;
+					}
+				}
+			}
+		}
+		// tests UU* = I
+		{
+			typename Algorithm::UMatrix eye =
+				this->algo.getU() * this->algo.getUT();
+			for (int i = 0; i < M; ++i) {
+				for (int j = 0; j < M; ++j) {
+					double e;
+					if (i == j) {
+						e = std::abs(eye(i, j) - 1.0);
+					} else {
+						e = std::abs(eye(i, j));
+					}
+					this->orthonormalUErrorSum += e;
+					if (e >= ROUNDED_ERROR) {
+						++this->numOrthonormalUErrors;
+					}
+				}
+			}
+		}
+		// tests VV* = I
+		{
+			typename Algorithm::VMatrix eye =
+				this->algo.getV() * this->algo.getVT();
+			for (int i = 0; i < N; ++i) {
+				for (int j = 0; j < N; ++j) {
+					double e;
+					if (i == j) {
+						e = std::abs(eye(i, j) - 1.0);
+					} else {
+						e = std::abs(eye(i, j));
+					}
+					this->orthonormalVErrorSum += e;
+					if (e >= ROUNDED_ERROR) {
+						++this->numOrthonormalVErrors;
+					}
+				}
+			}
 		}
 	}
-	// does decomposition
-	singular::Svd< M, N > svd;
-	singular::Svd< M, N >::USV usv = svd.decomposeUSV(m);
-}
 
-/**
- * Runs a benchmark on a given decomposition function.
- *
- * @param numIterations
- *     Number of the iterations.
- * @param seed
- *     Seed for the random number generator.
- * @param f
- *     Decomposition function which takes an array `e` of elements to be
- *     decomposed, where the element at the ith row and jth column is given by
- *     `e[i * N + j]`
- */
-double runBenchmark(
-	int numIterations, unsigned int seed, void (*f)(const double[]))
-{
-	std::chrono::steady_clock::time_point t1 = std::chrono::steady_clock::now();
-	double elements[M * N];
-	std::default_random_engine rnd(seed);
-	std::uniform_real_distribution< double > dist(0.0, 1.0);
-	for (int n = 0; n < numIterations; ++n) {
-		// generates random elements
-		std::generate_n(elements, M * N, [&rnd, &dist]() {
-			return dist(rnd);
-		});
-		// runs the function
-		f(elements);
+	/**
+	 * Compares singular values with given reference values.
+	 *
+	 * This must follow the call of the `verify` function.
+	 *
+	 * @tparam Matrix
+	 *     Matrix type of the reference singular values.
+	 * @param ref
+	 *     Reference singular values.
+	 */
+	template < typename Matrix >
+	void compareSingularValues(const Matrix& ref) {
+		typename Algorithm::SMatrix s = this->algo.getS();
+		for (int i = 0; i < std::min(M, N); ++i) {
+			double mx = std::max(std::abs(s(i, i)), std::abs(ref(i, i)));
+			double e = std::abs(s(i, i) - ref(i, i));
+			this->singularValueErrorSum += e;
+			if (e / mx >= ROUNDED_ERROR) {
+				++this->numSingularValueDiscrepancies;
+			}
+		}
 	}
-	std::chrono::steady_clock::time_point t2 = std::chrono::steady_clock::now();
-	std::chrono::duration< double > elapsed =
-		std::chrono::duration_cast< std::chrono::duration< double > >(t2 - t1);
-	return elapsed.count();
-}
+
+	/**
+	 * Returns whether the algorithm has been verified.
+	 *
+	 * The algorithm is considered verified if it passes all of the following
+	 * tests,
+	 *  - No reconstruction errors
+	 *  - No orthonormal left-singular vector errors
+	 *  - No orthonormal right-singular vector errors
+	 *
+	 * @return
+	 *     Whether the algorithm has been verified.
+	 */
+	inline bool isVerified() const {
+		return this->numReconstructionErrors == 0
+			&& this->numOrthonormalUErrors == 0
+			&& this->numOrthonormalVErrors == 0;
+	}
+
+	/** Prints statistics to the standard output. */
+	void printStatistics() {
+		double numReconstructionTests = M * N * this->numVerifications;
+		double numOrthonormalUTests = M * M * this->numVerifications;
+		double numOrthonormalVTests = N * N * this->numVerifications;
+		double numSingularValueTests = std::min(M, N) * this->numVerifications;
+		std::cout
+			<< "# of reconstruction errors: "
+			<< this->numReconstructionErrors
+			<< "  mean error: "
+			<< (this->reconstructionErrorSum / numReconstructionTests)
+			<< std::endl;
+		std::cout
+			<< "# of orthonormal U errors: "
+			<< this->numOrthonormalUErrors
+			<< "  mean error: "
+			<< (this->orthonormalUErrorSum / numOrthonormalUTests)
+			<< std::endl;
+		std::cout
+			<< "# of orthonormal V errors: "
+			<< this->numOrthonormalVErrors
+			<< "  mean error: "
+			<< (this->orthonormalVErrorSum / numOrthonormalVTests)
+			<< std::endl;
+		std::cout
+			<< "# of singular value discrepancies: "
+			<< this->numSingularValueDiscrepancies
+			<< "  mean error: "
+			<< (this->singularValueErrorSum / numSingularValueTests)
+			<< std::endl;
+	}
+};
 
 /**
  * Verifies results.
@@ -103,252 +553,50 @@ double runBenchmark(
  * @param seed
  *     Seed for the random number generator.
  * @return
- *     Whether results of Eigen and singular match.
+ *     Whether singular's results are verified.
  */
 bool verifyResults(int numIterations, unsigned int seed) {
-	int numEigenDecompositionErrors = 0;
-	double eigenDecompositionErrorSum = 0;
-	int numEigenOrthonormalUErrors = 0;
-	double eigenOrthonormalUErrorSum = 0;
-	int numEigenOrthonormalVErrors = 0;
-	double eigenOrthonormalVErrorSum = 0;
-	int numDecompositionErrors = 0;
-	double decompositionErrorSum = 0;
-	int numOrthonormalUErrors = 0;
-	double orthonormalUErrorSum = 0;
-	int numOrthonormalVErrors = 0;
-	double orthonormalVErrorSum = 0;
-	int numSDiscrepancies = 0;
-	double sErrorSum = 0;
-	int numUDiscrepancies = 0;
-	double uErrorSum = 0;
-	int numVDiscrepancies = 0;
-	double vErrorSum = 0;
+	SvdVerifier< SingularSvd > singularVerifier;
+#ifdef ENABLE_EIGEN
+	SvdVerifier< EigenSvd > eigenVerifier;
+#endif
+#ifdef ENABLE_ARMADILLO
+	SvdVerifier< ArmadilloSvd > armadilloVerifier;
+#endif
 	std::default_random_engine rnd(seed);
-	std::uniform_real_distribution< double > dist(0.0, 1.0);
+	std::uniform_real_distribution< double > dist(MIN_VALUE, MAX_VALUE);
 	double elements[M * N];
 	for (int n = 0; n < numIterations; ++n) {
-		// generates random elements
 		std::generate_n(elements, M * N, [&rnd, &dist]() {
 			return dist(rnd);
 		});
-		// does decomposition by Eigen
-		Eigen::Matrix< double, M, N > m1;
-		for (int i = 0; i < M; ++i) {
-			for (int j = 0; j < N; ++j) {
-				m1(i, j) = elements[i * N + j];
-			}
-		}
-		EigenSVD svd1(m1, Eigen::ComputeFullU | Eigen::ComputeFullV);
-		const EigenSVD::MatrixUType& u1 = svd1.matrixU();
-		const EigenSVD::SingularValuesType& s1 = svd1.singularValues();
-		const EigenSVD::MatrixVType& v1 = svd1.matrixV();
-		// tests whether A = USV^T is satisfied
-		{
-			EigenMatrix sm;
-			for (int i = 0; i < std::min(M, N); ++i) {
-				sm(i, i) = s1(i);
-			}
-			EigenMatrix m3 = u1 * sm * v1.transpose();
-			double mx = *std::max_element(elements, elements + M * N);
-			for (int i = 0; i < M; ++i) {
-				for (int j = 0; j < N; ++j) {
-					double e = std::abs(m1(i, j) - m3(i, j));
-					eigenDecompositionErrorSum += e;
-					if (e / mx >= ROUNDED_ERROR) {
-						++numEigenDecompositionErrors;
-					}
-				}
-			}
-		}
-		// tests whether U*U^T = I is satisfied
-		{
-			Eigen::Matrix< double, M, M > eye = u1 * u1.transpose();
-			for (int i = 0; i < M; ++i) {
-				for (int j = 0; j < M; ++j) {
-					double e;
-					if (i == j) {
-						e = std::abs(1.0 - eye(i, j));
-					} else {
-						e = std::abs(eye(i, j));
-					}
-					eigenOrthonormalUErrorSum += e;
-					if (e >= ROUNDED_ERROR) {
-						++numEigenOrthonormalUErrors;
-					}
-				}
-			}
-		}
-		// tests whether V*V^T = I is satisfied
-		{
-			Eigen::Matrix< double, N, N > eye = v1 * v1.transpose();
-			for (int i = 0; i < N; ++i) {
-				for (int j = 0; j < N; ++j) {
-					double e;
-					if (i == j) {
-						e = std::abs(1.0 - eye(i, j));
-					} else {
-						e = std::abs(eye(i, j));
-					}
-					eigenOrthonormalVErrorSum += e;
-					if (e >= ROUNDED_ERROR) {
-						++numEigenOrthonormalVErrors;
-					}
-				}
-			}
-		}
-		// does decomposition by singular
-		singular::Matrix< M, N > m2;
-		for (int i = 0; i < M; ++i) {
-			for (int j = 0; j < N; ++j) {
-				m2(i, j) = elements[i * N + j];
-			}
-		}
-		singular::Svd< M, N > svd2;
-		singular::Svd< M, N >::USV usv = svd2.decomposeUSV(m2);
-		const singular::Matrix< M, M >& u2 = singular::Svd< M, N >::getU(usv);
-		const singular::DiagonalMatrix< M, N >& s2 =
-			singular::Svd< M, N >::getS(usv);
-		const singular::Matrix< N, N >& v2 = singular::Svd< M, N >::getV(usv);
-		// tests whether A = USV^T is satisfied
-		{
-			double mx = *std::max_element(elements, elements + M * N);
-			singular::Matrix< M, N > m3 = u2 * s2 * v2.transpose();
-			for (int i = 0; i < M; ++i) {
-				for (int j = 0; j < N; ++j) {
-					double e = std::abs(m2(i, j) - m3(i, j));
-					decompositionErrorSum += e;
-					if (e / mx >= ROUNDED_ERROR) {
-						++numDecompositionErrors;
-					}
-				}
-			}
-		}
-		// tests whether U*U^T = I is satisfied
-		{
-			singular::Matrix< M, M > eye = u2 * u2.transpose();
-			for (int i = 0; i < M; ++i) {
-				for (int j = 0; j < M; ++j) {
-					double e;
-					if (i == j) {
-						e = std::abs(1.0 - eye(i, j));
-					} else {
-						e = std::abs(eye(i, j));
-					}
-					orthonormalUErrorSum += e;
-					if (e >= ROUNDED_ERROR) {
-						++numOrthonormalUErrors;
-					}
-				}
-			}
-		}
-		// tests whether V*V^T = I is satisfied
-		{
-			singular::Matrix< N, N > eye = v2 * v2.transpose();
-			for (int i = 0; i < N; ++i) {
-				for (int j = 0; j < N; ++j) {
-					double e;
-					if (i == j) {
-						e = std::abs(1.0 - eye(i, j));
-					} else {
-						e = std::abs(eye(i, j));
-					}
-					orthonormalVErrorSum += e;
-					if (e >= ROUNDED_ERROR) {
-						++numOrthonormalVErrors;
-					}
-				}
-			}
-		}
-		// compares singular values
-		for (int i = 0; i < std::min(M, N); ++i) {
-			double mx = std::max(std::abs(s1(i)), std::abs(s2(i, i)));
-			double e = std::abs(s1(i) - s2(i, i));
-			sErrorSum += e;
-			if (mx != 0) {
-				if (e / mx >= ROUNDED_ERROR) {
-					++numSDiscrepancies;
-				}
-			}
-		}
-		// ignores sign flips
-		std::vector< double > signs;
-		for (int i = 0; i < std::min(M, N); ++i) {
-			double sign = 1.0;
-			if (u1(0, i) * u2(0, i) < 0.0) {
-				sign = -1.0;
-			}
-			signs.push_back(sign);
-		}
-		// compares U matrices
-		for (int i = 0; i < M; ++i) {
-			for (int j = 0; j < std::min(M, N); ++j) {
-				double mx = std::max(std::abs(u1(i, j)), std::abs(u2(i, j)));
-				double e = std::abs(u1(i, j) - signs[j] * u2(i, j));
-				uErrorSum += e;
-				if (mx != 0) {
-					if (e / mx >= ROUNDED_ERROR) {
-						++numUDiscrepancies;
-					}
-				}
-			}
-		}
-		// compares V matrices
-		for (int i = 0; i < N; ++i) {
-			for (int j = 0; j < std::min(M, N); ++j) {
-				double mx = std::max(std::abs(v1(i, j)), std::abs(v2(i, j)));
-				double e = std::abs(v1(i, j) - signs[j] * v2(i, j));
-				vErrorSum += e;
-				if (mx != 0) {
-					if (e / mx >= ROUNDED_ERROR) {
-						++numVDiscrepancies;
-					}
-				}
-			}
-		}
+		singularVerifier.verify(elements);
+#ifdef ENABLE_EIGEN
+		eigenVerifier.verify(elements);
+		eigenVerifier.compareSingularValues(
+			singularVerifier.getAlgorithm().getS());
+#endif
+#ifdef ENABLE_ARMADILLO
+		armadilloVerifier.verify(elements);
+		armadilloVerifier.compareSingularValues(
+			singularVerifier.getAlgorithm().getS());
+#endif
 	}
 	// shows statistics
-	int numTotalElements = M * N * numIterations;
-	int numTotalUElements = M * M * numIterations;
-	int numTotalSElements = std::min(M, N) * numIterations;
-	int numTotalVElements = N * N * numIterations;
-	std::cout << "# of A=USV^T errors (Eigen): "
-		<< numEigenDecompositionErrors << std::endl;
-	std::cout << "mean A=USV^T error (Eigen): "
-		<< (eigenDecompositionErrorSum / numTotalElements) << std::endl;
-	std::cout << "# of A=USV^T errors (singular): "
-		<< numDecompositionErrors << std::endl;
-	std::cout << "mean A=USV^T error (singular): "
-		<< (decompositionErrorSum / numTotalElements) << std::endl;
-	std::cout << "# of U*U^T=I errors (Eigen): "
-		<< numEigenOrthonormalUErrors << std::endl;
-	std::cout << "mean U*U^T=I error (Eigen): "
-		<< (eigenOrthonormalUErrorSum / numTotalUElements) << std::endl;
-	std::cout << "# of U*U^T=I errors: " << numOrthonormalUErrors << std::endl;
-	std::cout << "mean U*U^T=I error: "
-		<< (orthonormalUErrorSum / numTotalUElements) << std::endl;
-	std::cout << "# of V*V^T=I errors (Eigen): "
-		<< numEigenOrthonormalVErrors << std::endl;
-	std::cout << "mean V*V^T=I error (Eigen): "
-		<< (eigenOrthonormalVErrorSum / numTotalVElements) << std::endl;
-	std::cout << "# of V*V^T=I errors: " << numOrthonormalVErrors << std::endl;
-	std::cout << "mean V*V^T=I error: "
-		<< (orthonormalVErrorSum / numTotalVElements) << std::endl;
-	std::cout << "# of S discrepancies: " << numSDiscrepancies << std::endl;
-	std::cout << "mean S error: "
-		<< (sErrorSum / numTotalSElements) << std::endl;
-	std::cout << "# of U discrepancies: " << numUDiscrepancies << std::endl;
-	std::cout << "mean U error: "
-		<< (uErrorSum / (M * std::min(M, N) * numIterations)) << std::endl;
-	std::cout << "# of V discrepancies: " << numVDiscrepancies << std::endl;
-	std::cout << "mean V error: "
-		<< (vErrorSum / (N * std::min(M, N) * numIterations)) << std::endl;
-	return numDecompositionErrors == 0
-		&& numOrthonormalUErrors == 0
-		&& numOrthonormalVErrors == 0
-		&& numSDiscrepancies == 0
-		&& numUDiscrepancies == 0
-		&& numVDiscrepancies == 0;
+	std::cout << "singular" << std::endl;
+	singularVerifier.printStatistics();
+	std::cout << std::endl;
+#ifdef ENABLE_EIGEN
+	std::cout << "Eigen" << std::endl;
+	eigenVerifier.printStatistics();
+	std::cout << std::endl;
+#endif
+#ifdef ENABLE_ARMADILLO
+	std::cout << "Armadillo" << std::endl;
+	armadilloVerifier.printStatistics();
+	std::cout << std::endl;
+#endif
+	return singularVerifier.isVerified();
 }
 
 /**
@@ -358,6 +606,7 @@ bool verifyResults(int numIterations, unsigned int seed) {
  *     `argv[1]` is an optional number of iterations.
  */
 int main(int argc, char** argv) {
+	// gets the number of iterations if given
 	int numIterations = DEFAULT_ITERATION_COUNT;
 	if (argc >= 2) {
 		numIterations = atoi(argv[1]);
@@ -369,40 +618,95 @@ int main(int argc, char** argv) {
 	}
 	std::cout << "# of iterations: " << numIterations << std::endl;
 	std::cout << "rounded error: " << ROUNDED_ERROR << std::endl;
+	std::cout << "min value: " << MIN_VALUE << std::endl;
+	std::cout << "max value: " << MAX_VALUE << std::endl;
+	std::cout << std::endl;
+	std::cout << "verifying results ..." << std::endl;
+	std::cout << std::endl;
 	unsigned int seed =
 		std::chrono::system_clock::now().time_since_epoch().count();
 	// verifies the results
 	bool verified = verifyResults(numIterations, seed);
-	// measures times
-	double eigenT = 0.0;
-	double singularT = 0.0;
-	double t = runBenchmark(numIterations, seed, &runSingularSvd);
-	singularT += t;
-	std::cout << "singular[1]: " << t << " seconds" << std::endl;
-	t = runBenchmark(numIterations, seed, &runEigenSvd);
-	eigenT += t;
-	std::cout << "Eigen[1]: " << t << " seconds" << std::endl;
-	t = runBenchmark(numIterations, seed, &runEigenSvd);
-	eigenT += t;
-	std::cout << "Eigen[2]: " << t << " seconds" << std::endl;
-	t = runBenchmark(numIterations, seed, &runSingularSvd);
-	singularT += t;
-	std::cout << "singular[2]: " << t << " seconds" << std::endl;
-	t = runBenchmark(numIterations, seed, &runSingularSvd);
-	singularT += t;
-	std::cout << "singular[3]: " << t << " seconds" << std::endl;
-	t = runBenchmark(numIterations, seed, &runEigenSvd);
-	eigenT += t;
-	std::cout << "Eigen[3]: " << t << " seconds" << std::endl;
-	t = runBenchmark(numIterations, seed, &runEigenSvd);
-	eigenT += t;
-	std::cout << "Eigen[4]: " << t << " seconds" << std::endl;
-	t = runBenchmark(numIterations, seed, &runSingularSvd);
-	singularT += t;
-	std::cout << "singular[4]: " << t << " seconds" << std::endl;
+	// runs benchmarks
+	Benchmark< SingularSvd > singularBenchmark(numIterations, seed);
+	Stopwatch singularWatch;
+#ifdef ENABLE_EIGEN
+	Benchmark< EigenSvd > eigenBenchmark(numIterations, seed);
+	Stopwatch eigenWatch;
+#endif
+#ifdef ENABLE_ARMADILLO
+	Benchmark< ArmadilloSvd > armadilloBenchmark(numIterations, seed);
+	Stopwatch armadilloWatch;
+#endif
+	std::cout << "measuring processing time ..." << std::endl;
+	// round 1
+	std::cout << "round 1" << std::endl;
+	singularWatch.measure(singularBenchmark);
+#ifdef ENABLE_EIGEN
+	eigenWatch.measure(eigenBenchmark);
+#endif
+#ifdef ENABLE_ARMADILLO
+	armadilloWatch.measure(armadilloBenchmark);
+#endif
+	// round 2
+	std::cout << "round 2" << std::endl;
+	singularWatch.measure(singularBenchmark);
+#ifdef ENABLE_ARMADILLO
+	armadilloWatch.measure(armadilloBenchmark);
+#endif
+#ifdef ENABLE_EIGEN
+	eigenWatch.measure(eigenBenchmark);
+#endif
+	// round 3
+	std::cout << "round 3" << std::endl;
+#ifdef ENABLE_EIGEN
+	eigenWatch.measure(eigenBenchmark);
+#endif
+	singularWatch.measure(singularBenchmark);
+#ifdef ENABLE_ARMADILLO
+	armadilloWatch.measure(armadilloBenchmark);
+#endif
+	// round 4
+	std::cout << "round 4" << std::endl;
+#ifdef ENABLE_EIGEN
+	eigenWatch.measure(eigenBenchmark);
+#endif
+#ifdef ENABLE_ARMADILLO
+	armadilloWatch.measure(armadilloBenchmark);
+#endif
+	singularWatch.measure(singularBenchmark);
+	// round 5
+	std::cout << "round 5" << std::endl;
+#ifdef ENABLE_ARMADILLO
+	armadilloWatch.measure(armadilloBenchmark);
+#endif
+#ifdef ENABLE_EIGEN
+	eigenWatch.measure(eigenBenchmark);
+#endif
+	singularWatch.measure(singularBenchmark);
+	// round 6
+	std::cout << "round 6" << std::endl;
+#ifdef ENABLE_ARMADILLO
+	armadilloWatch.measure(armadilloBenchmark);
+#endif
+	singularWatch.measure(singularBenchmark);
+#ifdef ENABLE_EIGEN
+	eigenWatch.measure(eigenBenchmark);
+#endif
+	std::cout << std::endl;
 	// shows statistics
-	std::cout << "Eigen average: " << (eigenT / 4.0) << " seconds" << std::endl;
-	std::cout << "singular average: "
-		<< (singularT / 4.0) << " seconds" << std::endl;
+	std::cout << "singular: " << std::endl;
+	singularWatch.printStatistics();
+	std::cout << std::endl;
+#ifdef ENABLE_EIGEN
+	std::cout << "Eigen: " << std::endl;
+	eigenWatch.printStatistics();
+	std::cout << std::endl;
+#endif
+#ifdef ENABLE_ARMADILLO
+	std::cout << "Armadillo: " << std::endl;
+	armadilloWatch.printStatistics();
+	std::cout << std::endl;
+#endif
 	return verified ? 0 : 1;
 }

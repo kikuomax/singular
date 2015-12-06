@@ -13,7 +13,9 @@ install:
   - mv libgtest* lib
   - cd ..
 
-script: cmake -DGTEST_ROOT=$PWD/googletest . && cmake --build . && ctest -V
+script:
+  - cmake -DGTEST_ROOT=$PWD/googletest . && cmake --build . && ctest -V
+  - ./benchmark 10
 
 os:
   - linux

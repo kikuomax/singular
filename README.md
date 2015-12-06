@@ -88,6 +88,91 @@ This can be done by turning on the `gtest_disable_pthreads` option at the config
 cmake -Dgtest_disable_pthreads=on .
 ```
 
+Benchmarking
+============
+
+[`test/benchmark.cpp`](/test/benchmark.cpp) is a simple benchmarking program.
+This program measures time needed to perform SVD over randomly generated matrices.
+It also evaluates the following qualities,
+ - Reversibility (`A = USV*`)
+ - Orthonormality of left-singular vectors (`UU* = I`)
+ - Orthonormality of right-singular vectors (`VV* = I`)
+
+[Eigen](http://eigen.tuxfamily.org/index.php?title=Main_Page) and [Armadillo](http://arma.sourceforge.net) can optionally be evaluated.
+This feature is initially disabled.
+
+To enable the benchmark on Eigen, please set the `EIGEN_INCLUDE` option to the directory where header files of Eigen are installed.
+
+To enable the benchmark on Armadillo, please set the `ARMADILLO_ROOT` option to the directory where Armadillo is installed.
+Armadillo needs [LAPACK](http://www.netlib.org/lapack/) and [BLAS](http://www.netlib.org/blas/) installed.
+On Mac OS X, you can link LAPACK and BLAS by adding a compiler flag `-framework Accelerate`.
+
+The following are the results on my PC.
+
+```
+# of iterations: 100
+rounded error: 1e-12
+min value: -10
+max value: 10
+
+verifying results ...
+
+singular
+# of reconstruction errors: 0  mean error: 1.91423e-14
+# of orthonormal U errors: 0  mean error: 2.04226e-16
+# of orthonormal V errors: 0  mean error: 2.4039e-16
+# of singular value discrepancies: 0  mean error: 0
+
+Eigen
+# of reconstruction errors: 0  mean error: 1.13621e-13
+# of orthonormal U errors: 0  mean error: 8.836e-16
+# of orthonormal V errors: 0  mean error: 4.77152e-16
+# of singular value discrepancies: 0  mean error: 4.06584e-13
+
+Armadillo
+# of reconstruction errors: 0  mean error: 1.06995e-14
+# of orthonormal U errors: 0  mean error: 1.63113e-16
+# of orthonormal V errors: 0  mean error: 1.97071e-16
+# of singular value discrepancies: 0  mean error: 5.12721e-14
+
+measuring processing time ...
+round 1
+round 2
+round 3
+round 4
+round 5
+round 6
+
+singular: 
+lap time[0]: 3.12234 seconds
+lap time[1]: 3.11206 seconds
+lap time[2]: 3.13547 seconds
+lap time[3]: 3.11839 seconds
+lap time[4]: 3.10184 seconds
+lap time[5]: 3.12369 seconds
+mean lap time: 3.11897 seconds
+
+Eigen: 
+lap time[0]: 6.76705 seconds
+lap time[1]: 6.77422 seconds
+lap time[2]: 6.77955 seconds
+lap time[3]: 6.79412 seconds
+lap time[4]: 6.75191 seconds
+lap time[5]: 6.81967 seconds
+mean lap time: 6.78109 seconds
+
+Armadillo: 
+lap time[0]: 0.0936958 seconds
+lap time[1]: 0.0937608 seconds
+lap time[2]: 0.093841 seconds
+lap time[3]: 0.0938368 seconds
+lap time[4]: 0.103309 seconds
+lap time[5]: 0.102466 seconds
+mean lap time: 0.0968182 seconds
+```
+
+Yes! Armadillo could be the best choice if you can use LAPACK and BLAS on your application.
+
 Generating documentation
 ========================
 

@@ -102,6 +102,16 @@ namespace singular {
 		}
 
 		/**
+		 * Returns a clone of this matrix.
+		 *
+		 * @return
+		 *     Clone of this matrix.
+		 */
+		inline DiagonalMatrix clone() const {
+			return DiagonalMatrix(this->pBlock);
+		}
+
+		/**
 		 * Returns the element at a given row and column.
 		 *
 		 * The behavior is undefined,

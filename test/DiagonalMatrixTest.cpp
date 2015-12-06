@@ -84,6 +84,51 @@ TEST(DiagonalMatrixTest, 2x3_DiagonalMatrix_can_be_initialized_from_diagonal_ele
 	EXPECT_EQ(0.0, m(1, 2));
 }
 
+TEST(DiagonalMatrixTest, 3x3_DiagonalMatrix_can_be_cloned) {
+	const int M = 3;
+	const int N = 3;
+	const double DIAGONAL[] = {
+		1.0, 2.0, 3.0
+	};
+	singular::DiagonalMatrix< M, N > m(DIAGONAL);
+	singular::DiagonalMatrix< M, N > m2 = m.clone();
+	for (int i = 0; i < M; ++i) {
+		for (int j = 0; j < N; ++j) {
+			EXPECT_EQ(m(i, j), m2(i, j));
+		}
+	}
+}
+
+TEST(DiagonalMatrixTest, 3x1_DiagonalMatrix_can_be_cloned) {
+	const int M = 3;
+	const int N = 1;
+	const double DIAGONAL[] = {
+		-0.5
+	};
+	singular::DiagonalMatrix< M, N > m(DIAGONAL);
+	singular::DiagonalMatrix< M, N > m2 = m.clone();
+	for (int i = 0; i < M; ++i) {
+		for (int j = 0; j < N; ++j) {
+			EXPECT_EQ(m(i, j), m2(i, j));
+		}
+	}
+}
+
+TEST(DiagonalMatrixTest, 2x3_DiagonalMatrix_can_be_cloned) {
+	const int M = 2;
+	const int N = 3;
+	const double DIAGONAL[] = {
+		1.9, -2.3
+	};
+	singular::DiagonalMatrix< M, N > m(DIAGONAL);
+	singular::DiagonalMatrix< M, N > m2 = m.clone();
+	for (int i = 0; i < M; ++i) {
+		for (int j = 0; j < N; ++j) {
+			EXPECT_EQ(m(i, j), m2(i, j));
+		}
+	}
+}
+
 TEST(DiagonalMatrixTest, Transposition_of_3x3_DiagonalMatrix_should_be_3x3_DiagonalMatrix) {
 	const int M = 3;
 	const int N = 3;
