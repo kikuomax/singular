@@ -78,8 +78,13 @@ set (BENCHMARK_COMPILE_FLAGS "")
 
 # enables benchmarks on Eigen if EIGEN_INCLUDE is set
 if (EIGEN_INCLUDE)
-	target_include_directories (benchmark
-		PUBLIC ${EIGEN_INCLUDE})
+	if (CMAKE_VERSION VERSION_EQUAL "3.0"
+			OR CMAKE_VERSION VERSION_GREATER "3.0")
+		target_include_directories (benchmark
+			PUBLIC ${EIGEN_INCLUDE})
+	else ()
+		include_directories (${EIGEN_INCLUDE})
+	endif ()
 	set (BENCHMARK_COMPILE_FLAGS "${BENCHMARK_COMPILE_FLAGS} -DENABLE_EIGEN")
 endif ()
 
@@ -98,8 +103,13 @@ if (ARMADILLO_ROOT)
 		find_package (BLAS)
 	endif ()
 	if (ARMADILLO_LIB AND LAPACK_FOUND AND BLAS_FOUND)
-		target_include_directories (benchmark
-			PUBLIC ${ARMADILLO_ROOT}/include)
+		if (CMAKE_VERSION VERSION_EQUAL "3.0"
+				OR CMAKE_VERSION VERSION_GREATER "3.0")
+			target_include_directories (benchmark
+				PUBLIC ${ARMADILLO_ROOT}/include)
+		else ()
+			include_directories (${ARMADILLO_ROOT}/include)
+		endif ()
 		target_link_libraries (benchmark
 			${ARMADILLO_LIB}
 			${LAPACK_LIBRARIES}

@@ -13,7 +13,7 @@ install:
   - mv libgtest* lib
   - cd ..
   - hg clone https://bitbucket.org/eigen/eigen/ -r "3.2.7"
-  - if [ "$CXX" == "clang++" ]; then export CXXFLAGS="-stdlb=libc++"; fi
+  - if [ "$CXX" == "clang++" ]; then export CXXFLAGS="-stdlib=libc++"; fi
 
 script:
   - cmake -DGTEST_ROOT=$PWD/googletest -DEIGEN_INCLUDE=$PWD/eigen . && cmake --build . && ctest -V
