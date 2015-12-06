@@ -98,6 +98,8 @@ It also evaluates the following qualities,
  - Orthonormality of left-singular vectors (`UU* = I`)
  - Orthonormality of right-singular vectors (`VV* = I`)
 
+If you do not want to compile the benchmark, turn off the `ENABLE_BENCHMARK` option.
+
 [Eigen](http://eigen.tuxfamily.org/index.php?title=Main_Page) and [Armadillo](http://arma.sourceforge.net) can optionally be evaluated.
 This feature is initially disabled.
 

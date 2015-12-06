@@ -7,6 +7,9 @@ set (PROJECT_MINOR 1)
 set (PROJECT_PATCH 3-SNAPSHOT)
 set (PROJECT_VERSION "${PROJECT_MAJOR}.${PROJECT_MINOR}.${PROJECT_PATCH}")
 
+# turn off if you do not want to compile benchmark
+option (ENABLE_BENCHMARK "Enable benchmark" on)
+
 # turn off if you want to dynamically link the MSVC runtime
 option (MSVC_LINK_STATIC_RUNTIME "Statically link the MSVC runtime" on)
 
@@ -71,68 +74,71 @@ include_directories (
 add_executable (svd-test test/test.cpp)
 
 # benchmark
-add_executable (benchmark test/benchmark.cpp)
+if (ENABLE_BENCHMARK)
+	add_executable (benchmark test/benchmark.cpp)
 
-# additional compiler flags for benchmark
-set (BENCHMARK_COMPILE_FLAGS "")
+	# additional compiler flags for benchmark
+	set (BENCHMARK_COMPILE_FLAGS "")
 
-# enables benchmarks on Eigen if EIGEN_INCLUDE is set
-if (EIGEN_INCLUDE)
-	if (CMAKE_VERSION VERSION_EQUAL "3.0"
-			OR CMAKE_VERSION VERSION_GREATER "3.0")
-		target_include_directories (benchmark
-			PUBLIC ${EIGEN_INCLUDE})
-	else ()
-		include_directories (${EIGEN_INCLUDE})
-	endif ()
-	set (BENCHMARK_COMPILE_FLAGS "${BENCHMARK_COMPILE_FLAGS} -DENABLE_EIGEN")
-endif ()
-
-# enables benchmarks on Armadillo if ARMADILLO_ROOT is set
-if (ARMADILLO_ROOT)
-	# locates the Armadillo, LAPACK and BLAS libraries
-	find_library (ARMADILLO_LIB armadillo HINTS ${ARMADILLO_ROOT}/lib)
-	if (APPLE)
-		# uses Accelerate framework on Apple products
-		set (LAPACK_FOUND true)
-		set (BLAS_FOUND true)
-		set (LAPACK_LIBRARIES "-framework Accelerate")
-		set (BLAS_LIBRARIES "")
-	else ()
-		find_package (LAPACK)
-		find_package (BLAS)
-	endif ()
-	if (ARMADILLO_LIB AND LAPACK_FOUND AND BLAS_FOUND)
+	# enables benchmarks on Eigen if EIGEN_INCLUDE is set
+	if (EIGEN_INCLUDE)
 		if (CMAKE_VERSION VERSION_EQUAL "3.0"
 				OR CMAKE_VERSION VERSION_GREATER "3.0")
 			target_include_directories (benchmark
-				PUBLIC ${ARMADILLO_ROOT}/include)
+				PUBLIC ${EIGEN_INCLUDE})
 		else ()
-			include_directories (${ARMADILLO_ROOT}/include)
+			include_directories (${EIGEN_INCLUDE})
 		endif ()
-		target_link_libraries (benchmark
-			${ARMADILLO_LIB}
-			${LAPACK_LIBRARIES}
-			${BLAS_LIBRARIES})
 		set (BENCHMARK_COMPILE_FLAGS
-			"${BENCHMARK_COMPILE_FLAGS} -DENABLE_ARMADILLO")
-	else ()
-		if (NOT ARMADILLO_LIB_FOUND)
-			message (WARNING
-				"no Armadillo library found in ${ARMADILLO_ROOT}/lib")
+			"${BENCHMARK_COMPILE_FLAGS} -DENABLE_EIGEN")
+	endif ()
+
+	# enables benchmarks on Armadillo if ARMADILLO_ROOT is set
+	if (ARMADILLO_ROOT)
+		# locates the Armadillo, LAPACK and BLAS libraries
+		find_library (ARMADILLO_LIB armadillo HINTS ${ARMADILLO_ROOT}/lib)
+		if (APPLE)
+			# uses Accelerate framework on Apple products
+			set (LAPACK_FOUND true)
+			set (BLAS_FOUND true)
+			set (LAPACK_LIBRARIES "-framework Accelerate")
+			set (BLAS_LIBRARIES "")
+		else ()
+			find_package (LAPACK)
+			find_package (BLAS)
 		endif ()
-		if (NOT LAPACK_FOUND)
-			message (WARNING "no LAPACK found")
-		endif ()
-		if (NOT BLAS_FOUND)
-			message (WARNING "no BLAS found")
+		if (ARMADILLO_LIB AND LAPACK_FOUND AND BLAS_FOUND)
+			if (CMAKE_VERSION VERSION_EQUAL "3.0"
+					OR CMAKE_VERSION VERSION_GREATER "3.0")
+				target_include_directories (benchmark
+					PUBLIC ${ARMADILLO_ROOT}/include)
+			else ()
+				include_directories (${ARMADILLO_ROOT}/include)
+			endif ()
+			target_link_libraries (benchmark
+				${ARMADILLO_LIB}
+				${LAPACK_LIBRARIES}
+				${BLAS_LIBRARIES})
+			set (BENCHMARK_COMPILE_FLAGS
+				"${BENCHMARK_COMPILE_FLAGS} -DENABLE_ARMADILLO")
+		else ()
+			if (NOT ARMADILLO_LIB_FOUND)
+				message (WARNING
+					"no Armadillo library found in ${ARMADILLO_ROOT}/lib")
+			endif ()
+			if (NOT LAPACK_FOUND)
+				message (WARNING "no LAPACK found")
+			endif ()
+			if (NOT BLAS_FOUND)
+				message (WARNING "no BLAS found")
+			endif ()
 		endif ()
 	endif ()
-endif ()
 
-if (BENCHMARK_COMPILE_FLAGS)
-	set_target_properties (benchmark
-		PROPERTIES COMPILE_FLAGS ${BENCHMARK_COMPILE_FLAGS})
+	if (BENCHMARK_COMPILE_FLAGS)
+		set_target_properties (benchmark
+			PROPERTIES COMPILE_FLAGS ${BENCHMARK_COMPILE_FLAGS})
+	endif ()
 endif ()
 
 # generates tests if necessary

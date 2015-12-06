@@ -9,7 +9,11 @@
 #endif
 
 #include <algorithm>
+#ifdef USE_CLOCK_T
+#include <ctime>
+#else
 #include <chrono>
+#endif
 #include <iostream>
 #include <random>
 #include <vector>
@@ -288,16 +292,22 @@ struct Benchmark {
 /** Stopwatch to evaluate an algorithm. */
 class Stopwatch {
 private:
-	/** Clock type used to measure elapsed time. */
-#if defined(__GNUC__) && !defined(__clang__) && __GNUC__ == 4 && __GNUC_MINOR__ < 7
-	// GCC prior to 4.7 does not have steady_clock
+#ifndef USE_CLOCK_T
+	/** Type for clock. */
+#if defined(__GNUC__) && !defined(__clang__) && __GNUC__ <= 4 && __GNUC_MINOR__ < 7
+	// gcc prior to 4.7 has monotonic_clock instead of steady_clock
 	typedef std::chrono::monotonic_clock ClockType;
 #else
 	typedef std::chrono::steady_clock ClockType;
 #endif
+#endif
 
 	/** Time point when this stopwatch has started. */
+#ifdef USE_CLOCK_T
+	clock_t sT;
+#else
 	ClockType::time_point sT;
+#endif
 
 	/** Measured lap times. */
 	std::vector< double > lapTimes;
@@ -336,7 +346,11 @@ public:
 private:
 	/** Starts measuring time. */
 	void start() {
-		this->sT = std::chrono::steady_clock::now();
+#ifdef USE_CLOCK_T
+		this->sT = clock();
+#else
+		this->sT = ClockType::now();
+#endif
 	}
 
 	/**
@@ -344,10 +358,17 @@ private:
 	 * has last started.
 	 */
 	void stop() {
+#ifdef USE_CLOCK_T
+		clock_t eT = clock();
+		this->lapTimes.push_back(
+			(eT - sT) / static_cast< double >(CLOCKS_PER_SEC));
+#else
 		ClockType::time_point eT = ClockType::now();
 		std::chrono::duration< double > elapsed =
-			std::chrono::duration_cast< std::chrono::duration< double > >(eT - this->sT);
+			std::chrono::duration_cast< std::chrono::duration< double > >
+				(eT - this->sT);
 		this->lapTimes.push_back(elapsed.count());
+#endif
 	}
 };
 
@@ -624,6 +645,8 @@ int main(int argc, char** argv) {
 			return 1;
 		}
 	}
+	std::cout << "# of rows: " << M << std::endl;
+	std::cout << "# of columns: " << N << std::endl;
 	std::cout << "# of iterations: " << numIterations << std::endl;
 	std::cout << "rounded error: " << ROUNDED_ERROR << std::endl;
 	std::cout << "min value: " << MIN_VALUE << std::endl;
