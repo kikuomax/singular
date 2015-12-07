@@ -4,7 +4,7 @@ project (singular)
 
 set (PROJECT_MAJOR 0)
 set (PROJECT_MINOR 1)
-set (PROJECT_PATCH 3-SNAPSHOT)
+set (PROJECT_PATCH 3)
 set (PROJECT_VERSION "${PROJECT_MAJOR}.${PROJECT_MINOR}.${PROJECT_PATCH}")
 
 # turn off if you do not want to compile benchmark

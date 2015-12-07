@@ -112,30 +112,35 @@ On Mac OS X, you can link LAPACK and BLAS by adding a compiler flag `-framework 
 The following are the results on my PC (MacBook Pro, 2.4GHz Intel Core i5).
 
 ```
+# of rows: 60
+# of columns: 50
 # of iterations: 100
 rounded error: 1e-12
 min value: -10
 max value: 10
+singular version: 0.1.3
+Eigen version: 3.2.7
+Armadillo version: 6.200.5 (Midnight Blue Deluxe)
 
 verifying results ...
 
 singular
-# of reconstruction errors: 0  mean error: 1.91423e-14
-# of orthonormal U errors: 0  mean error: 2.04226e-16
-# of orthonormal V errors: 0  mean error: 2.4039e-16
+# of reconstruction errors: 0  mean error: 1.96851e-14
+# of orthonormal U errors: 0  mean error: 2.04803e-16
+# of orthonormal V errors: 0  mean error: 2.42038e-16
 # of singular value discrepancies: 0  mean error: 0
 
 Eigen
-# of reconstruction errors: 0  mean error: 1.13621e-13
-# of orthonormal U errors: 0  mean error: 8.836e-16
-# of orthonormal V errors: 0  mean error: 4.77152e-16
-# of singular value discrepancies: 0  mean error: 4.06584e-13
+# of reconstruction errors: 0  mean error: 1.13796e-13
+# of orthonormal U errors: 0  mean error: 8.86169e-16
+# of orthonormal V errors: 0  mean error: 4.77086e-16
+# of singular value discrepancies: 0  mean error: 4.03472e-13
 
 Armadillo
-# of reconstruction errors: 0  mean error: 1.06995e-14
-# of orthonormal U errors: 0  mean error: 1.63113e-16
-# of orthonormal V errors: 0  mean error: 1.97071e-16
-# of singular value discrepancies: 0  mean error: 5.12721e-14
+# of reconstruction errors: 0  mean error: 1.08298e-14
+# of orthonormal U errors: 0  mean error: 1.60648e-16
+# of orthonormal V errors: 0  mean error: 1.97627e-16
+# of singular value discrepancies: 0  mean error: 5.28169e-14
 
 measuring processing time ...
 round 1
@@ -146,31 +151,31 @@ round 5
 round 6
 
 singular: 
-lap time[0]: 3.12234 seconds
-lap time[1]: 3.11206 seconds
-lap time[2]: 3.13547 seconds
-lap time[3]: 3.11839 seconds
-lap time[4]: 3.10184 seconds
-lap time[5]: 3.12369 seconds
-mean lap time: 3.11897 seconds
+lap time[0]: 3.09783 seconds
+lap time[1]: 3.08843 seconds
+lap time[2]: 3.08597 seconds
+lap time[3]: 3.07436 seconds
+lap time[4]: 3.07892 seconds
+lap time[5]: 3.08201 seconds
+mean lap time: 3.08459 seconds
 
 Eigen: 
-lap time[0]: 6.76705 seconds
-lap time[1]: 6.77422 seconds
-lap time[2]: 6.77955 seconds
-lap time[3]: 6.79412 seconds
-lap time[4]: 6.75191 seconds
-lap time[5]: 6.81967 seconds
-mean lap time: 6.78109 seconds
+lap time[0]: 6.63677 seconds
+lap time[1]: 6.61933 seconds
+lap time[2]: 6.64333 seconds
+lap time[3]: 6.66512 seconds
+lap time[4]: 6.64167 seconds
+lap time[5]: 6.62753 seconds
+mean lap time: 6.63896 seconds
 
 Armadillo: 
-lap time[0]: 0.0936958 seconds
-lap time[1]: 0.0937608 seconds
-lap time[2]: 0.093841 seconds
-lap time[3]: 0.0938368 seconds
-lap time[4]: 0.103309 seconds
-lap time[5]: 0.102466 seconds
-mean lap time: 0.0968182 seconds
+lap time[0]: 0.0938214 seconds
+lap time[1]: 0.0937346 seconds
+lap time[2]: 0.0936364 seconds
+lap time[3]: 0.0936577 seconds
+lap time[4]: 0.100055 seconds
+lap time[5]: 0.10046 seconds
+mean lap time: 0.0958942 seconds
 ```
 
 Yes! Armadillo could be the best choice if you can use LAPACK and BLAS on your application.
@@ -189,7 +194,7 @@ License
 References
 ==========
 
-Most of the code is derived from the following great book.
+Most of the code was derived from the following great book.
 
  - Watkins, David S. *Fundamentals of Matrix Computations*. 3rd ed. Hoboken: John Wiley & Sons, 2010
 

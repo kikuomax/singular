@@ -1,3 +1,4 @@
+#include "singular/singular.h"
 #include "singular/Svd.h"
 
 #ifdef ENABLE_ARMADILLO
@@ -651,6 +652,17 @@ int main(int argc, char** argv) {
 	std::cout << "rounded error: " << ROUNDED_ERROR << std::endl;
 	std::cout << "min value: " << MIN_VALUE << std::endl;
 	std::cout << "max value: " << MAX_VALUE << std::endl;
+	std::cout << "singular version: " << SINGULAR_VERSION << std::endl;
+#ifdef ENABLE_EIGEN
+	std::cout << "Eigen version: "
+		<< EIGEN_WORLD_VERSION << "."
+		<< EIGEN_MAJOR_VERSION << "."
+		<< EIGEN_MINOR_VERSION << std::endl;
+#endif
+#ifdef ENABLE_ARMADILLO
+	std::cout << "Armadillo version: "
+		<< arma::arma_version::as_string() << std::endl;
+#endif
 	std::cout << std::endl;
 	std::cout << "verifying results ..." << std::endl;
 	std::cout << std::endl;
