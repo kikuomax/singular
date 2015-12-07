@@ -654,8 +654,12 @@ int main(int argc, char** argv) {
 	std::cout << std::endl;
 	std::cout << "verifying results ..." << std::endl;
 	std::cout << std::endl;
+#ifdef USE_CLOCK_T
+	unsigned int seed = static_cast< unsigned int >(clock());
+#else
 	unsigned int seed =
 		std::chrono::system_clock::now().time_since_epoch().count();
+#endif
 	// verifies the results
 	bool verified = verifyResults(numIterations, seed);
 	// runs benchmarks

@@ -109,7 +109,7 @@ To enable the benchmark on Armadillo, please set the `ARMADILLO_ROOT` option to 
 Armadillo needs [LAPACK](http://www.netlib.org/lapack/) and [BLAS](http://www.netlib.org/blas/) installed.
 On Mac OS X, you can link LAPACK and BLAS by adding a compiler flag `-framework Accelerate`.
 
-The following are the results on my PC.
+The following are the results on my PC (MacBook Pro, 2.4GHz Intel Core i5).
 
 ```
 # of iterations: 100
